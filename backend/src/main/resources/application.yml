@@ -28,7 +28,6 @@ management:
 
 app:
   security:
-    mode: ${APP_SECURITY_MODE:INSECURE}
     cors:
       allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:8081}
     jwt:
