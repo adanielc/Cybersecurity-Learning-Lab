@@ -31,8 +31,9 @@ observar el problema de forma directa:
 
 Arranque:
 
+Docker Compose lee automaticamente `.env` desde la raiz del proyecto.
+
 ```bash
-cp .env.example .env
 docker compose -f docker-compose.insecure.yml up --build
 ```
 

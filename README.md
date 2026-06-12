@@ -36,7 +36,7 @@ Laboratorio educativo local para estudiar vulnerabilidades y remediaciones en un
 │       └── views/
 ├── docker-compose.yml
 ├── docker-compose.insecure.yml
-├── .env.example
+├── .env
 ├── docs/
 │   └── docker-security.md
 └── README.md
@@ -52,8 +52,9 @@ docker compose up --build
 
 ### Compose inseguro para el laboratorio de Docker
 
+Docker Compose lee automaticamente `.env` desde la raiz del proyecto.
+
 ```bash
-cp .env.example .env
 docker compose -f docker-compose.insecure.yml up --build
 ```
 
