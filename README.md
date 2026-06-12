@@ -83,22 +83,6 @@ docker compose -f docker-compose.insecure.yml up --build
 | postgres | 5432 | 5432 | Persistencia relacional |
 | mongo | 27017 | 27018 | Persistencia documental |
 
-## Ejecucion desde IntelliJ IDEA
-
-1. Abre el proyecto raiz en IntelliJ.
-2. Importa `backend/pom.xml` como proyecto Maven.
-3. Arranca PostgreSQL y MongoDB con `docker compose up postgres mongo`.
-4. Ejecuta `VulnerableAppApplication` con Java 17.
-5. Si necesitas levantar el frontend fuera de Docker, usa:
-
-```bash
-cd frontend
-npm install
-npm run serve
-```
-
-> Nota: si el frontend se sirve fuera de Docker, el puerto por defecto de Vue CLI puede diferir del que usa Compose. Ajusta la politica CORS si cambias el origen.
-
 ## Rutas del frontend
 
 Las vistas principales de la SPA son estas:
@@ -273,5 +257,3 @@ Variables principales de entorno:
 - No debe desplegarse en produccion tal y como esta.
 - Contiene vulnerabilidades intencionales para docencia.
 - No deben usarse credenciales reales.
-- `APP_SECURITY_MODE=INSECURE` solo debe utilizarse en un entorno de pruebas.
-- `APP_SECURITY_MODE=SECURE` activa las contrapartes endurecidas cuando el laboratorio lo soporta.
