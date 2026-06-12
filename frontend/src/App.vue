@@ -16,7 +16,14 @@
 
       <v-list nav dense class="drawer-list">
         <v-subheader>Laboratorio de Vulnerabilidades</v-subheader>
-        <v-list-item v-for="item in labLinks" :key="item.to" :to="item.to" router exact>
+        <v-list-item
+          v-for="item in labLinks"
+          :key="item.to"
+          :to="item.to"
+          router
+          exact
+          @click="closeDrawerOnMobile"
+        >
           <v-list-item-icon>
             <v-icon>{{ item.icon }}</v-icon>
           </v-list-item-icon>
@@ -25,6 +32,7 @@
           </v-list-item-content>
         </v-list-item>
 
+        <v-subheader class="drawer-account__subheader">Cuenta</v-subheader>
         <v-list-item class="drawer-account">
           <v-list-item-icon>
             <v-icon>mdi-account-circle</v-icon>
@@ -80,8 +88,6 @@
 </template>
 
 <script>
-import { DEFAULT_API_BASE_URL } from './utils/labApi'
-
 export default {
   name: 'App',
   data () {
@@ -114,6 +120,11 @@ export default {
     window.removeEventListener('tfm-auth-updated', this.onAuthUpdated)
   },
   methods: {
+    closeDrawerOnMobile () {
+      if (this.$vuetify.breakpoint.smAndDown) {
+        this.drawer = false
+      }
+    },
     loadUserLabel () {
       const sessionLabel = window.sessionStorage.getItem('tfm_lab_session_user')
       if (sessionLabel) {

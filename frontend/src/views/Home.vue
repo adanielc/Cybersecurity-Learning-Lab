@@ -14,7 +14,7 @@
             <v-btn color="primary" dark :to="firstLabRoute" class="mr-3">
               Ir al laboratorio
             </v-btn>
-            <v-btn outlined color="primary" :to="'/lab/jwt'">
+            <v-btn color="primary" dark :to="'/lab/jwt'">
               Ver JWT
             </v-btn>
           </div>
@@ -40,7 +40,7 @@
     </v-alert>
 
     <v-row class="mt-6">
-      <v-col cols="12" sm="6" lg="3" v-for="card in summaryCards" :key="card.title">
+      <v-col cols="12" md="4" v-for="card in summaryCards" :key="card.title">
         <v-card class="stat-card">
           <v-card-text>
             <div class="stat-card__icon">
@@ -55,7 +55,7 @@
     </v-row>
 
     <v-row class="mt-2">
-      <v-col cols="12" lg="8">
+      <v-col cols="12">
         <v-card class="section-card">
           <v-card-title class="section-card__title">
             <v-icon left color="primary">mdi-school-outline</v-icon>
@@ -76,45 +76,17 @@
           </v-card-text>
         </v-card>
       </v-col>
-
-      <v-col cols="12" lg="4">
-        <v-card class="section-card">
-          <v-card-title class="section-card__title">
-            <v-icon left color="primary">mdi-layers-triple-outline</v-icon>
-            Tecnologías
-          </v-card-title>
-          <v-divider />
-          <v-card-text>
-            <v-chip v-for="tech in technologies" :key="tech" class="ma-1" color="primary" text-color="white">
-              {{ tech }}
-            </v-chip>
-          </v-card-text>
-        </v-card>
-
-        <v-card class="section-card mt-4">
-          <v-card-title class="section-card__title">
-            <v-icon left color="warning">mdi-alert-circle-outline</v-icon>
-            Casos prácticos
-          </v-card-title>
-          <v-divider />
-          <v-card-text>
-            <v-alert type="info" outlined dense>
-              La plataforma concentra vulnerabilidades reales de laboratorio con versiones seguras asociadas, para
-              comparar impacto, remediación y validación.
-            </v-alert>
-          </v-card-text>
-        </v-card>
-      </v-col>
     </v-row>
 
     <v-row class="mt-4">
-      <v-col cols="12" v-for="item in featuredLabs" :key="item.name" md="6" lg="4">
+      <v-col cols="12" md="6" lg="4" v-for="item in featuredLabs" :key="item.name">
         <vulnerability-card
           :name="item.name"
           :description="item.description"
           :severity="item.severity"
           :owasp="item.owasp"
           :icon="item.icon"
+          :to="item.to"
         />
       </v-col>
     </v-row>
@@ -137,8 +109,7 @@ export default {
       summaryCards: [
         { title: 'Vulnerabilidades implementadas', value: '10+', subtitle: 'Laboratorios activos', icon: 'mdi-bug-outline' },
         { title: 'Estado del backend', value: 'PENDING', subtitle: 'API REST disponible', icon: 'mdi-server-outline' },
-        { title: 'Usuarios registrados', value: 'Seed data', subtitle: 'Datos educativos', icon: 'mdi-account-group-outline' },
-        { title: 'Casos prácticos', value: 'Múltiples', subtitle: 'REST, JWT, SQL, Mongo', icon: 'mdi-book-open-page-variant-outline' }
+        { title: 'Usuarios registrados', value: 'Seed data', subtitle: 'Datos educativos', icon: 'mdi-account-group-outline' }
       ],
       objectives: [
         {
@@ -158,28 +129,86 @@ export default {
           text: 'El dashboard expone el estado del backend y el acceso a los módulos prácticos.'
         }
       ],
-      technologies: ['Vue.js 2', 'Vuetify 2', 'Spring Boot 3', 'JWT', 'PostgreSQL', 'MongoDB', 'Docker'],
       featuredLabs: [
         {
           name: 'SQL Injection',
           description: 'Búsqueda vulnerable y segura con consultas parametrizadas.',
           severity: 'High',
           owasp: 'A03 Injection',
-          icon: 'mdi-database-search'
+          icon: 'mdi-database-search',
+          to: '/lab/sqli'
+        },
+        {
+          name: 'NoSQL Injection',
+          description: 'Comparativa entre JSON arbitrario y DTO tipado en MongoDB.',
+          severity: 'High',
+          owasp: 'A03 Injection',
+          icon: 'mdi-database',
+          to: '/lab/nosqli'
         },
         {
           name: 'BOLA / IDOR',
           description: 'Control de acceso por ownership y rol frente a IDs manipulados.',
           severity: 'High',
           owasp: 'A01 Broken Access Control',
-          icon: 'mdi-account-key'
+          icon: 'mdi-account-key',
+          to: '/lab/bola'
+        },
+        {
+          name: 'JWT',
+          description: 'Emisión y validación de tokens con almacenamiento educativo.',
+          severity: 'High',
+          owasp: 'A02 Cryptographic Failures',
+          icon: 'mdi-key-variant',
+          to: '/lab/jwt'
+        },
+        {
+          name: 'CORS',
+          description: 'Política permisiva frente a configuración restringida por origen.',
+          severity: 'Medium',
+          owasp: 'A05 Security Misconfiguration',
+          icon: 'mdi-origin',
+          to: '/lab/cors'
+        },
+        {
+          name: 'Excessive Data Exposure',
+          description: 'Entidades completas frente a DTOs públicos de mínima información.',
+          severity: 'Medium',
+          owasp: 'A01 Broken Access Control',
+          icon: 'mdi-eye',
+          to: '/lab/exposure'
+        },
+        {
+          name: 'Rate Limiting',
+          description: 'Sin límite de intentos frente a bloqueo temporal en memoria.',
+          severity: 'Medium',
+          owasp: 'A07 Identification and Authentication Failures',
+          icon: 'mdi-timer-sand',
+          to: '/lab/rate-limit'
+        },
+        {
+          name: 'XSS',
+          description: 'Renderizado de HTML sin sanitizar frente a escape de contenido.',
+          severity: 'High',
+          owasp: 'A03 Injection',
+          icon: 'mdi-code-tags',
+          to: '/lab/xss'
+        },
+        {
+          name: 'Almacenamiento de tokens',
+          description: 'localStorage frente a memoria o cookie HttpOnly.',
+          severity: 'High',
+          owasp: 'A07 Identification and Authentication Failures',
+          icon: 'mdi-shield-key',
+          to: '/lab/token-storage'
         },
         {
           name: 'Broken Authentication',
-          description: 'Enumeración, contraseñas débiles y defensa frente a fuerza bruta.',
+          description: 'Errores de login y registro frente a políticas y mensajes genéricos.',
           severity: 'High',
           owasp: 'A07 Identification and Authentication Failures',
-          icon: 'mdi-lock-alert'
+          icon: 'mdi-lock-alert',
+          to: '/lab/broken-auth'
         }
       ]
     }

@@ -4,9 +4,9 @@
     icon="mdi-timer-sand"
     description="Compara un login sin límite de intentos frente a otro protegido con límite temporal y respuesta HTTP 429."
     vulnerable-endpoint="POST /api/lab/rate-limit/login-insecure"
-    secure-endpoint="POST /api/lab/rate-limit/login-secure | GET /api/lab/rate-limit/status"
+    secure-endpoint="POST /api/lab/rate-limit/login-secure"
     vulnerable-method="POST"
-    secure-method="POST / GET"
+    secure-method="POST"
     vulnerable-hint="La versión vulnerable permite fuerza bruta sin freno."
     secure-hint="La versión segura limita intentos por minuto y devuelve 429 al superar el umbral."
     :remediation-points="remediationPoints"
@@ -31,11 +31,6 @@
         <v-col cols="12" md="4">
           <v-btn block color="success" :loading="loading.secure" @click="loginSecure">
             Login seguro
-          </v-btn>
-        </v-col>
-        <v-col cols="12" md="4">
-          <v-btn block outlined color="primary" :loading="loading.status" @click="loadStatus">
-            Ver estado
           </v-btn>
         </v-col>
       </v-row>
@@ -76,7 +71,6 @@ export default {
       loading: {
         vulnerable: false,
         secure: false,
-        status: false,
         batch: false
       },
       vulnerableResult: null,
@@ -134,21 +128,6 @@ export default {
         this.secureOk = false
       } finally {
         this.loading.secure = false
-      }
-    },
-    async loadStatus () {
-      this.loading.status = true
-      try {
-        const response = await this.$http.get(`${this.apiBaseUrl}/lab/rate-limit/status`)
-        this.secureResult = response.data
-        this.secureMessage = 'El estado muestra el contador y la ventana activa.'
-        this.secureOk = true
-      } catch (error) {
-        this.secureResult = apiPayload(error)
-        this.secureMessage = apiMessage(error)
-        this.secureOk = false
-      } finally {
-        this.loading.status = false
       }
     },
     async runBatch () {
