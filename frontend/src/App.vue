@@ -103,6 +103,7 @@ export default {
         { label: 'JWT / Validación', to: '/lab/jwt', icon: 'mdi-key-variant' },
         { label: 'CORS', to: '/lab/cors', icon: 'mdi-origin' },
         { label: 'Excessive Data Exposure', to: '/lab/exposure', icon: 'mdi-eye' },
+        { label: 'Docker inseguro', to: '/lab/docker-security', icon: 'mdi-docker' },
         { label: 'Rate Limiting', to: '/lab/rate-limit', icon: 'mdi-timer-sand' },
         { label: 'XSS', to: '/lab/xss', icon: 'mdi-code-tags' },
         { label: 'Almacenamiento de tokens', to: '/lab/token-storage', icon: 'mdi-shield-key' },

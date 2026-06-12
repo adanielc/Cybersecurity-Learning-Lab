@@ -5,6 +5,7 @@ import BrokenAuthLab from '../views/BrokenAuthLab.vue'
 import BolaLab from '../views/BolaLab.vue'
 import CorsLab from '../views/CorsLab.vue'
 import DataExposureLab from '../views/DataExposureLab.vue'
+import DockerSecurityLab from '../views/DockerSecurityLab.vue'
 import JwtLab from '../views/JwtLab.vue'
 import NoSqlInjectionLab from '../views/NoSqlInjectionLab.vue'
 import RateLimitLab from '../views/RateLimitLab.vue'
@@ -67,6 +68,12 @@ const routes = [
     name: 'exposure-lab',
     component: DataExposureLab,
     alias: '/labs/exposure'
+  },
+  {
+    path: '/lab/docker-security',
+    name: 'docker-security-lab',
+    component: DockerSecurityLab,
+    alias: '/labs/docker-security'
   },
   {
     path: '/lab/rate-limit',

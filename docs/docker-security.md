@@ -1,44 +1,63 @@
-# Docker Security Lab
+# Docker Security Guide
 
-Este documento compara la configuración Docker del laboratorio en tres niveles:
+Este documento resume la configuracion Docker actual del laboratorio y las
+recomendaciones de endurecimiento que deben revisarse antes de pensar en un
+despliegue fuera del entorno academico.
 
-- `docker-compose.yml`: desarrollo controlado.
-- `docker-compose.insecure.yml`: variante vulnerable para demostrar malas prácticas.
-- `docker-compose.secure.yml`: variante endurecida de referencia.
+## Compose actual del proyecto
 
-## Principios usados
+El fichero activo es `docker-compose.yml` y levanta:
 
-- No publicar bases de datos al host salvo necesidad explícita.
-- Usar redes internas para aislar backend y datos.
-- Ejecutar los contenedores de aplicación como usuario no root.
-- Añadir healthchecks para coordinar el arranque.
-- Evitar credenciales reales y secretos productivos.
-- Mantener los valores sensibles en `.env` o variables de entorno.
+- `frontend` en `http://localhost:8083`
+- `backend` en `http://localhost:8082`
+- `postgres` en `localhost:5432`
+- `mongo` en `localhost:27018`
 
-## Qué hace insegura la variante vulnerable
+Los servicios de datos usan volumenes persistentes y healthchecks. El backend
+se ejecuta como usuario no root en la configuracion actual.
 
-- Expone PostgreSQL y MongoDB al host.
-- Usa credenciales triviales y predecibles.
-- Ejecuta backend y frontend como `root`.
-- No usa healthchecks.
-- No separa la red interna de datos.
-- No usa secretos ni perfiles.
+## Variante insegura para el laboratorio
 
-## Qué mejora la variante segura
+El fichero `docker-compose.insecure.yml` publica los servicios sensibles al
+host y quita varias medidas de endurecimiento para que el alumno pueda
+observar el problema de forma directa:
 
-- PostgreSQL y MongoDB no se publican al host.
-- Backend y bases de datos comparten una red interna aislada.
-- Backend y frontend se ejecutan como usuarios no root.
-- Hay healthchecks para PostgreSQL y MongoDB.
-- Las credenciales de ejemplo no son productivas.
-- El `APP_SECURITY_MODE` queda en `SECURE`.
+- PostgreSQL publicado en `localhost:5432`.
+- MongoDB publicado en `localhost:27017`.
+- Backend publicado en `localhost:8081` y ejecutado como `root`.
+- Frontend publicado en `localhost:8080`.
+- Sin healthchecks.
+- Sin aislamiento de red adicional.
 
-## Qué cambiar antes de producción
+Arranque:
 
-- Sustituir cualquier credencial de ejemplo por secretos gestionados externamente.
-- Eliminar puertos publicados que no sean estrictamente necesarios.
-- Usar `APP_JWT_SECRET` fuerte y rotado.
-- Considerar un orquestador o gestor de secretos real.
-- Revisar `APP_CORS_ALLOWED_ORIGINS` para que no admita orígenes innecesarios.
-- Asegurar que la imagen se actualiza con frecuencia y que el usuario no root está validado en CI.
+```bash
+cp .env.example .env
+docker compose -f docker-compose.insecure.yml up --build
+```
 
+## Principios de seguridad aplicados
+
+- Separacion de frontend, backend y bases de datos en servicios distintos.
+- Uso de variables de entorno para configuracion sensible.
+- Healthchecks para coordinar el arranque.
+- Ejecutar la aplicacion como usuario no root cuando es viable.
+- Mantener la superficie publica limitada a lo necesario para el laboratorio.
+
+## Puntos a revisar antes de produccion
+
+- No publicar PostgreSQL ni MongoDB al host salvo necesidad real.
+- Usar secretos gestionados externamente en lugar de credenciales de ejemplo.
+- Revisar `APP_SECURITY_MODE`, `JWT_SECRET` y las politicas CORS.
+- Verificar que la imagen de backend y frontend se construye con versiones
+  actualizadas y base minima.
+- Mantener logs, backups y observabilidad separados de la configuracion de
+  desarrollo.
+- Mantener los servicios sensibles en una red interna cuando el caso de uso lo
+  permita.
+
+## Observacion academica
+
+Este laboratorio esta disenado para un entorno local y controlado. Las
+configuraciones actuales no deben tomarse como plantilla de produccion sin una
+revision completa de seguridad.

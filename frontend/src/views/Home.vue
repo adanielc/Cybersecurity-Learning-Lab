@@ -107,7 +107,7 @@ export default {
       error: '',
       loading: false,
       summaryCards: [
-        { title: 'Vulnerabilidades implementadas', value: '10+', subtitle: 'Laboratorios activos', icon: 'mdi-bug-outline' },
+        { title: 'Vulnerabilidades implementadas', value: '11+', subtitle: 'Laboratorios activos', icon: 'mdi-bug-outline' },
         { title: 'Estado del backend', value: 'PENDING', subtitle: 'API REST disponible', icon: 'mdi-server-outline' },
         { title: 'Usuarios registrados', value: 'Seed data', subtitle: 'Datos educativos', icon: 'mdi-account-group-outline' }
       ],
@@ -209,6 +209,14 @@ export default {
           owasp: 'A07 Identification and Authentication Failures',
           icon: 'mdi-lock-alert',
           to: '/lab/broken-auth'
+        },
+        {
+          name: 'Docker inseguro',
+          description: 'Puertos publicados, root y sin aislamiento frente a un despliegue endurecido.',
+          severity: 'Medium',
+          owasp: 'A05 Security Misconfiguration',
+          icon: 'mdi-docker',
+          to: '/lab/docker-security'
         }
       ]
     }
