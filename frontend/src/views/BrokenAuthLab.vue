@@ -284,8 +284,7 @@ export default {
           username: '',
           email: '',
           displayName: '',
-          role: '',
-          mode: ''
+          role: ''
         }
       }
 
@@ -296,8 +295,7 @@ export default {
         username: '',
         email: '',
         displayName: '',
-        role: '',
-        mode: ''
+        role: ''
       }
     }
   }

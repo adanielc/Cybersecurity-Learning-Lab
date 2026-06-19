@@ -1,6 +1,5 @@
 package com.tfm.vulnerableapp.service;
 
-import com.tfm.vulnerableapp.config.SecurityModeProperties;
 import com.tfm.vulnerableapp.dto.RateLimitLoginRequest;
 import com.tfm.vulnerableapp.dto.RateLimitLoginResponse;
 import org.springframework.http.HttpStatus;
@@ -21,12 +20,7 @@ public class RateLimitLabService {
     private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final Duration WINDOW = Duration.ofMinutes(1);
 
-    private final SecurityModeProperties securityModeProperties;
     private final Map<String, Deque<Instant>> failedAttemptsByKey = new ConcurrentHashMap<>();
-
-    public RateLimitLabService(SecurityModeProperties securityModeProperties) {
-        this.securityModeProperties = securityModeProperties;
-    }
 
     public RateLimitLoginResponse loginInsecure(RateLimitLoginRequest request, String clientIp) {
         /*

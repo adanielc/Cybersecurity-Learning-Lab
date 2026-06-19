@@ -10,7 +10,6 @@ public record AuthResponse(
         String email,
         String displayName,
         String role,
-        String mode,
         Instant expiresAt
 ) {
 }

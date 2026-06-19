@@ -27,9 +27,4 @@ public class SqlInjectionLabController {
     public List<SqlInjectionUserResponse> searchSecure(@RequestParam(defaultValue = "") String username) {
         return service.searchSecure(username);
     }
-
-    @GetMapping("/users/search-mode")
-    public List<SqlInjectionUserResponse> searchByMode(@RequestParam(defaultValue = "") String username) {
-        return service.searchByMode(username);
-    }
 }

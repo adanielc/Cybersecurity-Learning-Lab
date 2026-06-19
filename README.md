@@ -164,7 +164,6 @@ mongosh "mongodb://vulnlab:vulnlab@localhost:27017/tfm_lab?authSource=admin"
 | --- | --- | --- |
 | GET | `/api/lab/sqli/users/search` | Busqueda vulnerable por `username`. |
 | GET | `/api/lab/sqli/users/search-secure` | Busqueda segura parametrizada. |
-| GET | `/api/lab/sqli/users/search-mode` | Punto unico que alterna segun la configuracion del laboratorio. |
 
 ### NoSQL Injection
 
@@ -182,6 +181,8 @@ mongosh "mongodb://vulnlab:vulnlab@localhost:27017/tfm_lab?authSource=admin"
 | GET | `/api/lab/bola/profile/{userId}` | Perfil vulnerable por identificador. |
 | GET | `/api/lab/bola/profile-secure/{userId}` | Perfil seguro con control de ownership y rol. |
 | GET | `/api/lab/bola/my-profile` | Perfil del usuario autenticado. |
+
+Los endpoints seguros de BOLA usan las cabeceras educativas `X-Lab-User-Id`, `X-Lab-Username` y `X-Lab-Role` para simular la identidad autenticada del laboratorio.
 
 ### JWT y almacenamiento de tokens
 
@@ -238,7 +239,6 @@ mongosh "mongodb://vulnlab:vulnlab@localhost:27017/tfm_lab?authSource=admin"
 
 Variables principales de entorno:
 
-- `APP_SECURITY_MODE`
 - `APP_CORS_ALLOWED_ORIGINS`
 - `JWT_SECRET`
 - `SPRING_DATASOURCE_URL`

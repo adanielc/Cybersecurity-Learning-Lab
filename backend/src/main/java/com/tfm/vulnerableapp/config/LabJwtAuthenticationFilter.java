@@ -28,11 +28,11 @@ public class LabJwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Set<String> VALID_PURPOSES = Set.of("token-storage-lab", "broken-auth-lab");
 
     private final ObjectMapper objectMapper;
-    private final SecurityModeProperties securityModeProperties;
+    private final LabSecurityProperties labSecurityProperties;
 
-    public LabJwtAuthenticationFilter(ObjectMapper objectMapper, SecurityModeProperties securityModeProperties) {
+    public LabJwtAuthenticationFilter(ObjectMapper objectMapper, LabSecurityProperties labSecurityProperties) {
         this.objectMapper = objectMapper;
-        this.securityModeProperties = securityModeProperties;
+        this.labSecurityProperties = labSecurityProperties;
     }
 
     @Override
@@ -102,7 +102,7 @@ public class LabJwtAuthenticationFilter extends OncePerRequestFilter {
     private String sign(String unsignedToken) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(securityModeProperties.jwt().secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            mac.init(new SecretKeySpec(labSecurityProperties.jwt().secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(mac.doFinal(unsignedToken.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception ex) {
             throw new ResponseStatusException(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo validar el JWT", ex);

@@ -1,6 +1,5 @@
 package com.tfm.vulnerableapp.controller;
 
-import com.tfm.vulnerableapp.config.SecurityModeProperties;
 import com.tfm.vulnerableapp.dto.RateLimitLoginRequest;
 import com.tfm.vulnerableapp.dto.RateLimitLoginResponse;
 import com.tfm.vulnerableapp.service.RateLimitLabService;
@@ -16,14 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class RateLimitLabController {
 
     private final RateLimitLabService rateLimitLabService;
-    private final SecurityModeProperties securityModeProperties;
 
-    public RateLimitLabController(
-        RateLimitLabService rateLimitLabService,
-        SecurityModeProperties securityModeProperties
-    ) {
+    public RateLimitLabController(RateLimitLabService rateLimitLabService) {
         this.rateLimitLabService = rateLimitLabService;
-        this.securityModeProperties = securityModeProperties;
     }
 
     @PostMapping("/login-insecure")

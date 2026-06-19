@@ -1,6 +1,5 @@
 package com.tfm.vulnerableapp.service;
 
-import com.tfm.vulnerableapp.config.SecurityModeProperties;
 import com.tfm.vulnerableapp.dto.PublicUserDto;
 import com.tfm.vulnerableapp.entity.DataExposureUserEntity;
 import com.tfm.vulnerableapp.repository.DataExposureUserRepository;
@@ -16,14 +15,9 @@ import java.util.List;
 public class DataExposureLabService {
 
     private final DataExposureUserRepository dataExposureUserRepository;
-    private final SecurityModeProperties securityModeProperties;
 
-    public DataExposureLabService(
-        DataExposureUserRepository dataExposureUserRepository,
-        SecurityModeProperties securityModeProperties
-    ) {
+    public DataExposureLabService(DataExposureUserRepository dataExposureUserRepository) {
         this.dataExposureUserRepository = dataExposureUserRepository;
-        this.securityModeProperties = securityModeProperties;
     }
 
     @PostConstruct

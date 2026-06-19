@@ -1,7 +1,7 @@
 package com.tfm.vulnerableapp.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tfm.vulnerableapp.config.SecurityModeProperties;
+import com.tfm.vulnerableapp.config.LabSecurityProperties;
 import com.tfm.vulnerableapp.dto.AuthResponse;
 import com.tfm.vulnerableapp.dto.LoginRequest;
 import com.tfm.vulnerableapp.dto.RegisterRequest;
@@ -35,7 +35,7 @@ public class BrokenAuthLabService {
 
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
-    private final SecurityModeProperties securityModeProperties;
+    private final LabSecurityProperties labSecurityProperties;
 
     private final Map<String, InsecureUser> insecureUsers = new LinkedHashMap<>();
     private final Map<String, SecureUser> secureUsers = new LinkedHashMap<>();
@@ -43,10 +43,10 @@ public class BrokenAuthLabService {
 
     public BrokenAuthLabService(ObjectMapper objectMapper,
                                 PasswordEncoder passwordEncoder,
-                                SecurityModeProperties securityModeProperties) {
+                                LabSecurityProperties labSecurityProperties) {
         this.objectMapper = objectMapper;
         this.passwordEncoder = passwordEncoder;
-        this.securityModeProperties = securityModeProperties;
+        this.labSecurityProperties = labSecurityProperties;
     }
 
     @PostConstruct
@@ -201,7 +201,6 @@ public class BrokenAuthLabService {
                 email,
                 displayName,
                 role,
-                securityModeProperties.mode().name(),
                 Instant.now().plus(30, ChronoUnit.MINUTES)
         );
     }
@@ -217,7 +216,6 @@ public class BrokenAuthLabService {
         payload.put("username", username);
         payload.put("role", role);
         payload.put("purpose", JWT_PURPOSE);
-        payload.put("mode", securityModeProperties.mode().name());
         payload.put("iat", Instant.now().getEpochSecond());
         payload.put("exp", Instant.now().plus(30, ChronoUnit.MINUTES).getEpochSecond());
 
@@ -234,7 +232,7 @@ public class BrokenAuthLabService {
     private String sign(String unsignedToken) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(securityModeProperties.jwt().secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            mac.init(new SecretKeySpec(labSecurityProperties.jwt().secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             return base64Url(mac.doFinal(unsignedToken.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo firmar el token", ex);

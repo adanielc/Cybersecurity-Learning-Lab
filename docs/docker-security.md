@@ -49,7 +49,7 @@ docker compose -f docker-compose.insecure.yml up --build
 
 - No publicar PostgreSQL ni MongoDB al host salvo necesidad real.
 - Usar secretos gestionados externamente en lugar de credenciales de ejemplo.
-- Revisar `APP_SECURITY_MODE`, `JWT_SECRET` y las politicas CORS.
+- Revisar `JWT_SECRET` y las politicas CORS.
 - Verificar que la imagen de backend y frontend se construye con versiones
   actualizadas y base minima.
 - Mantener logs, backups y observabilidad separados de la configuracion de

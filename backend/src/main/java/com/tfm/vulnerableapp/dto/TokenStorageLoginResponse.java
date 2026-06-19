@@ -6,7 +6,6 @@ public record TokenStorageLoginResponse(
         String accessToken,
         String tokenType,
         String algorithm,
-        String mode,
         String tokenPurpose,
         String storageAdvice,
         boolean cookieAvailable,

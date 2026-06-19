@@ -1,12 +1,12 @@
 package com.tfm.vulnerableapp;
 
-import com.tfm.vulnerableapp.config.SecurityModeProperties;
+import com.tfm.vulnerableapp.config.LabSecurityProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties(SecurityModeProperties.class)
+@EnableConfigurationProperties(LabSecurityProperties.class)
 public class VulnerableAppApplication {
 
     public static void main(String[] args) {

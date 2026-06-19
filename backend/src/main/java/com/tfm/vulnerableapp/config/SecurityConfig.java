@@ -42,11 +42,20 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(SecurityModeProperties properties) {
+    public CorsConfigurationSource corsConfigurationSource(LabSecurityProperties properties) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(properties.cors().allowedOrigins());
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "OPTIONS"));
-        configuration.setAllowedHeaders(java.util.List.of("Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"));
+        configuration.setAllowedHeaders(java.util.List.of(
+                "Content-Type",
+                "Authorization",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                LabIdentityFilter.HEADER_USER_ID,
+                LabIdentityFilter.HEADER_USERNAME,
+                LabIdentityFilter.HEADER_ROLE
+        ));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

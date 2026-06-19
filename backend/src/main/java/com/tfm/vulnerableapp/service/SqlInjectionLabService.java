@@ -1,7 +1,5 @@
 package com.tfm.vulnerableapp.service;
 
-import com.tfm.vulnerableapp.config.SecurityModeProperties;
-import com.tfm.vulnerableapp.config.SecurityModeProperties.Mode;
 import com.tfm.vulnerableapp.dto.SqlInjectionUserResponse;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
@@ -12,11 +10,9 @@ import org.springframework.stereotype.Service;
 public class SqlInjectionLabService {
 
     private final JdbcTemplate jdbcTemplate;
-    private final SecurityModeProperties securityModeProperties;
 
-    public SqlInjectionLabService(JdbcTemplate jdbcTemplate, SecurityModeProperties securityModeProperties) {
+    public SqlInjectionLabService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.securityModeProperties = securityModeProperties;
     }
 
     @PostConstruct
@@ -58,12 +54,5 @@ public class SqlInjectionLabService {
                 rs.getString("email"),
                 rs.getString("role")
         ), username);
-    }
-
-    public List<SqlInjectionUserResponse> searchByMode(String username) {
-        if (securityModeProperties.mode() == Mode.SECURE) {
-            return searchSecure(username);
-        }
-        return searchVulnerable(username);
     }
 }

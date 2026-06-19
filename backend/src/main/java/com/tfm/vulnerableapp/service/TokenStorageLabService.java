@@ -1,6 +1,6 @@
 package com.tfm.vulnerableapp.service;
 
-import com.tfm.vulnerableapp.config.SecurityModeProperties;
+import com.tfm.vulnerableapp.config.LabSecurityProperties;
 import com.tfm.vulnerableapp.dto.TokenStorageLoginRequest;
 import com.tfm.vulnerableapp.dto.TokenStorageLoginResponse;
 import com.tfm.vulnerableapp.dto.TokenStorageMeResponse;
@@ -35,13 +35,13 @@ public class TokenStorageLabService {
     private static final Pattern JSON_NUMBER_FIELD = Pattern.compile("\"([^\"]+)\"\\s*:\\s*([0-9]+)");
 
     private final PasswordEncoder passwordEncoder;
-    private final SecurityModeProperties securityModeProperties;
+    private final LabSecurityProperties labSecurityProperties;
     private final Map<String, LabAccount> accounts = new LinkedHashMap<>();
 
     public TokenStorageLabService(PasswordEncoder passwordEncoder,
-                                  SecurityModeProperties securityModeProperties) {
+                                  LabSecurityProperties labSecurityProperties) {
         this.passwordEncoder = passwordEncoder;
-        this.securityModeProperties = securityModeProperties;
+        this.labSecurityProperties = labSecurityProperties;
     }
 
     @PostConstruct
@@ -68,7 +68,6 @@ public class TokenStorageLabService {
                 cookieMode ? null : token,
                 "Bearer",
                 "HS256",
-                securityModeProperties.mode().name(),
                 "JWT access token for the laboratory",
                 "Store it in memory or send it via HttpOnly cookie. localStorage increases the impact of XSS.",
                 cookieMode,
@@ -118,7 +117,6 @@ public class TokenStorageLabService {
                 + "\"name\":\"" + escapeJson(account.displayName()) + "\","
                 + "\"role\":\"" + escapeJson(account.role()) + "\","
                 + "\"purpose\":\"" + JWT_PURPOSE + "\","
-                + "\"mode\":\"" + securityModeProperties.mode().name() + "\","
                 + "\"iat\":" + issuedAt.getEpochSecond() + ","
                 + "\"exp\":" + expiresAt.getEpochSecond()
                 + "}";
@@ -179,7 +177,7 @@ public class TokenStorageLabService {
     private String sign(String unsignedToken) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(securityModeProperties.jwt().secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            mac.init(new SecretKeySpec(labSecurityProperties.jwt().secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             return base64Url(mac.doFinal(unsignedToken.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo firmar el JWT", ex);
@@ -234,12 +232,6 @@ public class TokenStorageLabService {
         return value
                 .replace("\\\"", "\"")
                 .replace("\\\\", "\\");
-    }
-
-    private void validateJwtField(boolean condition) {
-        if (!condition) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT inválido");
-        }
     }
 
     private void register(Long id, String username, String displayName, String role, String password) {
