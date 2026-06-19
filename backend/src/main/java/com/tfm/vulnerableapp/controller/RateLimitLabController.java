@@ -1,14 +1,17 @@
 package com.tfm.vulnerableapp.controller;
 
+import com.tfm.vulnerableapp.dto.RateLimitBucketResponse;
 import com.tfm.vulnerableapp.dto.RateLimitLoginRequest;
 import com.tfm.vulnerableapp.dto.RateLimitLoginResponse;
 import com.tfm.vulnerableapp.service.RateLimitLabService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/lab/rate-limit")
@@ -34,6 +37,22 @@ public class RateLimitLabController {
         HttpServletRequest servletRequest
     ) {
         return ResponseEntity.ok(rateLimitLabService.loginSecure(request, clientIp(servletRequest)));
+    }
+
+    @GetMapping("/state")
+    public ResponseEntity<RateLimitBucketResponse> state(
+        @RequestParam String username,
+        HttpServletRequest servletRequest
+    ) {
+        return ResponseEntity.ok(rateLimitLabService.inspectBucket(username, clientIp(servletRequest)));
+    }
+
+    @PostMapping("/reset")
+    public ResponseEntity<RateLimitBucketResponse> reset(
+        @RequestParam String username,
+        HttpServletRequest servletRequest
+    ) {
+        return ResponseEntity.ok(rateLimitLabService.resetBucket(username, clientIp(servletRequest)));
     }
 
 

@@ -1,5 +1,6 @@
 package com.tfm.vulnerableapp.service;
 
+import com.tfm.vulnerableapp.dto.RateLimitBucketResponse;
 import com.tfm.vulnerableapp.dto.RateLimitLoginRequest;
 import com.tfm.vulnerableapp.dto.RateLimitLoginResponse;
 import org.springframework.http.HttpStatus;
@@ -69,6 +70,35 @@ public class RateLimitLabService {
         }
 
         return new RateLimitLoginResponse(false, "Credenciales invalidas", failedAttempts, remainingAttempts);
+    }
+
+    public RateLimitBucketResponse inspectBucket(String username, String clientIp) {
+        String normalizedUsername = normalize(username);
+        String normalizedIp = normalize(clientIp);
+        String bucketKey = buildKey(normalizedIp, normalizedUsername);
+
+        Deque<Instant> failures = failedAttemptsByKey.computeIfAbsent(bucketKey, key -> new ArrayDeque<>());
+        pruneWindow(failures);
+
+        int failedAttempts = failures.size();
+        int remainingAttempts = Math.max(0, MAX_FAILED_ATTEMPTS - failedAttempts);
+
+        return new RateLimitBucketResponse(
+            normalizedUsername,
+            normalizedIp,
+            failedAttempts,
+            remainingAttempts,
+            MAX_FAILED_ATTEMPTS,
+            WINDOW.toSeconds(),
+            failedAttempts >= MAX_FAILED_ATTEMPTS
+        );
+    }
+
+    public RateLimitBucketResponse resetBucket(String username, String clientIp) {
+        String normalizedUsername = normalize(username);
+        String normalizedIp = normalize(clientIp);
+        failedAttemptsByKey.remove(buildKey(normalizedIp, normalizedUsername));
+        return inspectBucket(normalizedUsername, normalizedIp);
     }
 
     private boolean isValidCredentials(RateLimitLoginRequest request) {
