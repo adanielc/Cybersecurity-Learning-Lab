@@ -2,40 +2,47 @@
   <lab-page-shell
     title="SQL Injection"
     icon="mdi-database-search"
-    description="Una SQL Injection aparece cuando el backend mezcla datos del usuario con la consulta SQL. El laboratorio compara una búsqueda vulnerable con una consulta parametrizada segura."
-    vulnerable-endpoint="GET /api/lab/sqli/users/search?username=valor"
-    secure-endpoint="GET /api/lab/sqli/users/search-secure?username=valor"
-    vulnerable-hint="La consulta vulnerable concatena el parámetro y convierte la entrada en parte del SQL."
-    secure-hint="La consulta segura separa la estructura SQL del dato usando parámetros."
+    description="Una SQL Injection aparece cuando el backend mezcla datos del usuario con la consulta SQL. Aquí se comparan dos escenarios: un GET de búsqueda y un POST de login con bypass."
+    vulnerable-endpoint="GET /api/lab/sqli/users/search | POST /api/lab/sqli/login"
+    secure-endpoint="GET /api/lab/sqli/users/search-secure | POST /api/lab/sqli/login-secure"
+    vulnerable-method="GET / POST"
+    secure-method="GET / POST"
+    vulnerable-hint="La versión vulnerable concatena el valor recibido y lo convierte en parte del SQL."
+    secure-hint="La versión segura separa la estructura SQL del dato usando parámetros."
     :remediation-points="remediationPoints"
     :side-bullets="sideBullets"
     :show-vulnerable-result-section="false"
     :show-secure-result-section="false"
-    side-text="SQL Injection no solo aparece en búsquedas. También es común en formularios de login, filtros, pantallas de administración, exportaciones y cualquier endpoint que construya SQL dinámico sin parametrizar."
+    side-text="El verbo HTTP no provoca la vulnerabilidad. Un GET de búsqueda y un POST de login son vulnerables exactamente por el mismo motivo: el backend concatena entrada del usuario dentro de la sentencia SQL."
     owasp-label="OWASP A03: Injection"
-    risk-label="Impacto alto: fuga de datos, bypass de login y manipulación de consultas"
+    risk-label="Impacto alto: fuga de datos, bypass de login y manipulación del WHERE"
   >
     <template #practice-vulnerable>
       <div class="didactic-stack">
         <div>
           <div class="mini-title">Qué pasa por detrás</div>
           <p class="mini-text">
-            El backend recibe el valor de <code>username</code> y lo pega dentro del <code>WHERE</code>.
-            Si el usuario escribe un payload como <code>' OR '1'='1</code>, la condición deja de ser una búsqueda exacta.
+            En el flujo vulnerable el backend arma un string SQL final. Da igual si el dato viene de un
+            <code>query param</code> en un GET o de un <code>JSON body</code> en un POST.
           </p>
         </div>
 
         <div>
-          <div class="mini-title">Consulta construida</div>
-          <pre class="sql-box sql-box--danger">{{ vulnerableQueryPreview }}</pre>
+          <div class="mini-title">GET vulnerable</div>
+          <pre class="sql-box sql-box--danger">{{ searchVulnerableQueryPreview }}</pre>
         </div>
 
         <div>
-          <div class="mini-title">Fallo real</div>
+          <div class="mini-title">POST vulnerable</div>
+          <pre class="sql-box sql-box--danger">{{ loginVulnerableQueryPreview }}</pre>
+        </div>
+
+        <div>
+          <div class="mini-title">Efecto</div>
           <ul class="remediation-list compact-list">
-            <li>La entrada del usuario se mezcla con el código SQL.</li>
-            <li>La base de datos interpreta el payload como lógica, no como texto.</li>
-            <li>Esto puede devolver más filas de las esperadas o alterar la consulta.</li>
+            <li>En búsqueda puede ampliar o alterar el filtro.</li>
+            <li>En login puede anular la comprobación del password y hacer bypass.</li>
+            <li>La base de datos ejecuta la consulta alterada porque el payload pasó a ser código SQL.</li>
           </ul>
         </div>
       </div>
@@ -46,22 +53,27 @@
         <div>
           <div class="mini-title">Qué cambia</div>
           <p class="mini-text">
-            El SQL mantiene un placeholder <code>?</code> y el valor viaja aparte. Aunque el usuario envíe un payload,
-            la base de datos lo trata como dato literal.
+            En el flujo seguro el SQL queda fijo y los valores se envían como parámetros. El payload llega a la base
+            de datos como dato literal, no como una nueva condición del <code>WHERE</code>.
           </p>
         </div>
 
         <div>
-          <div class="mini-title">Consulta segura</div>
-          <pre class="sql-box sql-box--safe">{{ secureQueryPreview }}</pre>
+          <div class="mini-title">GET seguro</div>
+          <pre class="sql-box sql-box--safe">{{ searchSecureQueryPreview }}</pre>
+        </div>
+
+        <div>
+          <div class="mini-title">POST seguro</div>
+          <pre class="sql-box sql-box--safe">{{ loginSecureQueryPreview }}</pre>
         </div>
 
         <div>
           <div class="mini-title">Resultado esperado</div>
           <ul class="remediation-list compact-list">
-            <li>La consulta no cambia de significado.</li>
-            <li>El payload no puede abrir comillas ni inyectar operadores.</li>
-            <li>La búsqueda sigue siendo exacta para el campo esperado.</li>
+            <li>La búsqueda sigue comparando solo el campo esperado.</li>
+            <li>El login sigue comprobando username y password reales.</li>
+            <li>El payload no puede cerrar comillas ni comentar el resto de la sentencia.</li>
           </ul>
         </div>
       </div>
@@ -89,29 +101,51 @@
         </v-card-title>
         <v-divider />
         <v-card-text>
-          <v-row>
-            <v-col cols="12" md="6">
-              <div class="code-caption code-caption--danger">Versión vulnerable</div>
-              <pre class="code-box">{{ vulnerableCode }}</pre>
-            </v-col>
-            <v-col cols="12" md="6">
-              <div class="code-caption code-caption--safe">Versión segura</div>
-              <pre class="code-box">{{ secureCode }}</pre>
-            </v-col>
-          </v-row>
+          <div class="flow-block">
+            <div class="flow-block__title">Escenario 1: GET de búsqueda</div>
+            <v-row>
+              <v-col cols="12" md="6">
+                <div class="code-caption code-caption--danger">Vulnerable</div>
+                <pre class="code-box">{{ searchVulnerableCode }}</pre>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="code-caption code-caption--safe">Seguro</div>
+                <pre class="code-box">{{ searchSecureCode }}</pre>
+              </v-col>
+            </v-row>
+          </div>
+
+          <div class="flow-block flow-block--spaced">
+            <div class="flow-block__title">Escenario 2: POST de login</div>
+            <v-row>
+              <v-col cols="12" md="6">
+                <div class="code-caption code-caption--danger">Vulnerable</div>
+                <pre class="code-box">{{ loginVulnerableCode }}</pre>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="code-caption code-caption--safe">Seguro</div>
+                <pre class="code-box">{{ loginSecureCode }}</pre>
+              </v-col>
+            </v-row>
+          </div>
         </v-card-text>
       </v-card>
 
       <v-card outlined class="mb-4">
         <v-card-title class="subtitle-2">
-          Prueba el payload
+          Escenario 1: GET de búsqueda
         </v-card-title>
         <v-divider />
         <v-card-text>
+          <p class="mini-text mb-4">
+            En este caso el usuario manipula el parámetro <code>username</code> de una búsqueda. La inyección cambia
+            el filtro del <code>WHERE</code> y puede devolver más filas de las previstas.
+          </p>
+
           <v-row>
             <v-col cols="12">
               <v-text-field
-                v-model="username"
+                v-model="searchUsername"
                 label="Valor enviado en username"
                 outlined
                 dense
@@ -122,13 +156,13 @@
 
           <div class="payload-actions">
             <v-btn
-              v-for="item in quickPayloads"
+              v-for="item in searchPayloads"
               :key="item.value"
               small
               outlined
               color="primary"
               class="mr-2 mb-2"
-              @click="setPayload(item.value)"
+              @click="setSearchPayload(item.value)"
             >
               {{ item.label }}
             </v-btn>
@@ -136,97 +170,182 @@
 
           <v-row class="mt-2">
             <v-col cols="12" md="6">
-              <v-btn block color="warning" :loading="loadingVulnerable" @click="searchVulnerable">
-                Ejecutar búsqueda vulnerable
+              <v-btn block color="warning" :loading="loadingSearchVulnerable" @click="searchVulnerable">
+                Ejecutar GET vulnerable
               </v-btn>
             </v-col>
             <v-col cols="12" md="6">
-              <v-btn block color="success" :loading="loadingSecure" @click="searchSecure">
-                Ejecutar búsqueda segura
+              <v-btn block color="success" :loading="loadingSearchSecure" @click="searchSecure">
+                Ejecutar GET seguro
               </v-btn>
             </v-col>
           </v-row>
 
-          <v-alert type="info" outlined dense class="mt-4 mb-0">
-            En un formulario de login ocurre lo mismo si alguien construye algo como
-            <code>SELECT * FROM users WHERE username = '...'</code> y concatena también el password.
-            El problema no es el tipo de pantalla, sino concatenar entrada de usuario dentro del SQL.
-          </v-alert>
+          <v-row class="mt-4">
+            <v-col cols="12" md="6">
+              <v-card outlined class="result-card full-height">
+                <v-card-title class="subtitle-2">
+                  Resultado vulnerable
+                </v-card-title>
+                <v-divider />
+                <v-card-text>
+                  <v-alert v-if="searchVulnerableMessage" :type="searchVulnerableOk ? 'success' : 'error'" outlined dense>
+                    {{ searchVulnerableMessage }}
+                  </v-alert>
+
+                  <pre class="sql-box sql-box--danger">{{ searchVulnerableQueryPreview }}</pre>
+                  <div class="explanation-box explanation-box--danger">
+                    {{ searchVulnerableExplanation }}
+                  </div>
+                  <pre class="json-box mt-4">{{ pretty(searchVulnerableResult) }}</pre>
+                </v-card-text>
+              </v-card>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-card outlined class="result-card full-height">
+                <v-card-title class="subtitle-2">
+                  Resultado seguro
+                </v-card-title>
+                <v-divider />
+                <v-card-text>
+                  <v-alert v-if="searchSecureMessage" :type="searchSecureOk ? 'success' : 'error'" outlined dense>
+                    {{ searchSecureMessage }}
+                  </v-alert>
+
+                  <pre class="sql-box sql-box--safe">{{ searchSecureQueryPreview }}</pre>
+                  <div class="explanation-box explanation-box--safe">
+                    {{ searchSecureExplanation }}
+                  </div>
+                  <pre class="json-box mt-4">{{ pretty(searchSecureResult) }}</pre>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card>
 
       <v-card outlined class="mb-4">
         <v-card-title class="subtitle-2">
-          Resultado vulnerable
+          Escenario 2: POST de login con bypass
         </v-card-title>
         <v-divider />
         <v-card-text>
-          <v-alert v-if="vulnerableMessage" :type="vulnerableOk ? 'success' : 'error'" outlined dense>
-            {{ vulnerableMessage }}
-          </v-alert>
+          <p class="mini-text mb-4">
+            Aquí el atacante no quiere ampliar una búsqueda, sino entrar sin credenciales válidas. El objetivo es romper
+            la condición <code>username = ... AND password = ...</code> para que el backend dé por autenticado al usuario.
+          </p>
 
-          <v-card outlined class="mb-4 result-card">
-            <v-card-title class="subtitle-2">
-              Qué ha interpretado la base de datos
-            </v-card-title>
-            <v-divider />
-            <v-card-text>
-              <pre class="sql-box sql-box--danger">{{ vulnerableQueryPreview }}</pre>
-              <div class="explanation-box explanation-box--danger">
-                {{ vulnerableExplanation }}
-              </div>
-            </v-card-text>
-          </v-card>
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="loginForm.username"
+                label="Username enviado en el POST"
+                outlined
+                dense
+                hide-details="auto"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="loginForm.password"
+                label="Password enviado en el POST"
+                outlined
+                dense
+                hide-details="auto"
+              />
+            </v-col>
+          </v-row>
 
-          <pre class="json-box">{{ pretty(vulnerableResult) }}</pre>
-        </v-card-text>
-      </v-card>
+          <div class="payload-actions">
+            <v-btn
+              v-for="item in loginPayloads"
+              :key="item.label"
+              small
+              outlined
+              color="primary"
+              class="mr-2 mb-2"
+              @click="setLoginPayload(item)"
+            >
+              {{ item.label }}
+            </v-btn>
+          </div>
 
-      <v-card outlined>
-        <v-card-title class="subtitle-2">
-          Resultado seguro
-        </v-card-title>
-        <v-divider />
-        <v-card-text>
-          <v-alert v-if="secureMessage" :type="secureOk ? 'success' : 'error'" outlined dense>
-            {{ secureMessage }}
-          </v-alert>
+          <v-row class="mt-2">
+            <v-col cols="12" md="6">
+              <v-btn block color="warning" :loading="loadingLoginVulnerable" @click="loginVulnerable">
+                Ejecutar POST vulnerable
+              </v-btn>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-btn block color="success" :loading="loadingLoginSecure" @click="loginSecure">
+                Ejecutar POST seguro
+              </v-btn>
+            </v-col>
+          </v-row>
 
-          <v-card outlined class="mb-4 result-card">
-            <v-card-title class="subtitle-2">
-              Cómo se protege la consulta
-            </v-card-title>
-            <v-divider />
-            <v-card-text>
-              <pre class="sql-box sql-box--safe">{{ secureQueryPreview }}</pre>
-              <div class="explanation-box explanation-box--safe">
-                {{ secureExplanation }}
-              </div>
-            </v-card-text>
-          </v-card>
+          <v-row class="mt-4">
+            <v-col cols="12" md="6">
+              <v-card outlined class="result-card full-height">
+                <v-card-title class="subtitle-2">
+                  Resultado vulnerable
+                </v-card-title>
+                <v-divider />
+                <v-card-text>
+                  <v-alert v-if="loginVulnerableMessage" :type="loginVulnerableOk ? 'success' : 'error'" outlined dense>
+                    {{ loginVulnerableMessage }}
+                  </v-alert>
 
-          <pre class="json-box">{{ pretty(secureResult) }}</pre>
+                  <pre class="sql-box sql-box--danger">{{ loginVulnerableQueryPreview }}</pre>
+                  <div class="explanation-box explanation-box--danger">
+                    {{ loginVulnerableExplanation }}
+                  </div>
+                  <pre class="json-box mt-4">{{ pretty(loginVulnerableResult) }}</pre>
+                </v-card-text>
+              </v-card>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-card outlined class="result-card full-height">
+                <v-card-title class="subtitle-2">
+                  Resultado seguro
+                </v-card-title>
+                <v-divider />
+                <v-card-text>
+                  <v-alert v-if="loginSecureMessage" :type="loginSecureOk ? 'success' : 'error'" outlined dense>
+                    {{ loginSecureMessage }}
+                  </v-alert>
+
+                  <pre class="sql-box sql-box--safe">{{ loginSecureQueryPreview }}</pre>
+                  <div class="explanation-box explanation-box--safe">
+                    {{ loginSecureExplanation }}
+                  </div>
+                  <pre class="json-box mt-4">{{ pretty(loginSecureResult) }}</pre>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card>
     </template>
 
     <template #remediation>
-      <div class="didactic-stack">
+      <div class="didactic-stack remediation-stack">
         <div>
           <div class="mini-title">Cómo evitarlo a nivel de código</div>
           <ul class="remediation-list">
             <li>Usa consultas parametrizadas, prepared statements, JPA o query builders seguros.</li>
-            <li>No construyas <code>WHERE</code>, <code>ORDER BY</code> ni fragmentos SQL con concatenación de strings.</li>
-            <li>Valida la entrada, pero no confíes en la validación como sustituto de la parametrización.</li>
-            <li>Aplica mínimo privilegio en la cuenta de base de datos para reducir impacto si algo falla.</li>
+            <li>No concatenes datos de entrada en <code>WHERE</code>, <code>ORDER BY</code> ni cláusulas dinámicas.</li>
+            <li>Valida la entrada, pero no la uses como sustituto de parametrizar.</li>
+            <li>Aplica mínimo privilegio en la cuenta de base de datos para reducir el impacto si algo falla.</li>
           </ul>
         </div>
 
         <div>
           <div class="mini-title">Idea clave para el alumno</div>
           <p class="mini-text mb-0">
-            SQL Injection no depende de que el campo sea de búsqueda o de login. Aparece cuando el backend trata
-            la entrada del usuario como parte del comando SQL en vez de tratarla como dato.
+            La diferencia entre GET y POST aquí no es de seguridad. El riesgo aparece cuando el backend convierte la
+            entrada del usuario en parte de la sentencia SQL, ya sea en una búsqueda o en un login.
           </p>
         </div>
       </div>
@@ -244,132 +363,228 @@ export default {
   data () {
     return {
       apiBaseUrl: DEFAULT_API_BASE_URL,
-      username: 'alice',
-      loadingVulnerable: false,
-      loadingSecure: false,
-      vulnerableResult: null,
-      secureResult: null,
-      vulnerableMessage: '',
-      secureMessage: '',
-      vulnerableOk: false,
-      secureOk: false,
-      vulnerableCode: [
+      searchUsername: 'alice',
+      loginForm: {
+        username: 'alice',
+        password: 'password123'
+      },
+      loadingSearchVulnerable: false,
+      loadingSearchSecure: false,
+      loadingLoginVulnerable: false,
+      loadingLoginSecure: false,
+      searchVulnerableResult: null,
+      searchSecureResult: null,
+      loginVulnerableResult: null,
+      loginSecureResult: null,
+      searchVulnerableMessage: '',
+      searchSecureMessage: '',
+      loginVulnerableMessage: '',
+      loginSecureMessage: '',
+      searchVulnerableOk: false,
+      searchSecureOk: false,
+      loginVulnerableOk: false,
+      loginSecureOk: false,
+      searchVulnerableCode: [
         'public List<SqlInjectionUserResponse> searchVulnerable(String username) {',
         '    String sql = "SELECT id, username, email, role FROM lab_users WHERE username = \'" + username + "\'";',
         '    return jdbcTemplate.query(sql, rowMapper);',
         '}'
       ].join('\n'),
-      secureCode: [
+      searchSecureCode: [
         'public List<SqlInjectionUserResponse> searchSecure(String username) {',
         '    String sql = "SELECT id, username, email, role FROM lab_users WHERE username = ?";',
         '    return jdbcTemplate.query(sql, rowMapper, username);',
         '}'
       ].join('\n'),
+      loginVulnerableCode: [
+        'public SqlInjectionLoginResponse loginVulnerable(LoginRequest request) {',
+        '    String sql = "SELECT id, username, email, role FROM lab_users WHERE username = \'"',
+        '        + request.username() + "\' AND password = \'" + request.password() + "\'";',
+        '    List<SqlInjectionUserResponse> users = jdbcTemplate.query(sql, rowMapper);',
+        '    return new SqlInjectionLoginResponse(!users.isEmpty(), users.size(), users);',
+        '}'
+      ].join('\n'),
+      loginSecureCode: [
+        'public SqlInjectionLoginResponse loginSecure(LoginRequest request) {',
+        '    String sql = "SELECT id, username, email, role FROM lab_users WHERE username = ? AND password = ?";',
+        '    List<SqlInjectionUserResponse> users = jdbcTemplate.query(sql, rowMapper, request.username(), request.password());',
+        '    return new SqlInjectionLoginResponse(!users.isEmpty(), users.size(), users);',
+        '}'
+      ].join('\n'),
       commonPlaces: [
         {
-          title: 'Búsquedas y filtros',
-          text: 'Campos como username, email, id, fecha o texto libre suelen terminar dentro de un WHERE.'
+          title: 'Búsquedas y filtros GET',
+          text: 'Un parámetro como username, email o id acaba dentro de un WHERE y altera el filtro.'
         },
         {
-          title: 'Formularios de login',
-          text: 'También puede aparecer si username y password se concatenan para validar credenciales.'
+          title: 'Login POST',
+          text: 'Username y password también pueden inyectarse si el backend concatena ambos en la misma consulta.'
         },
         {
-          title: 'Paneles de administración',
-          text: 'Listados con filtros, ordenaciones o exportaciones son un punto clásico cuando se construye SQL dinámico.'
+          title: 'Paneles y listados',
+          text: 'Filtros, ordenaciones, exportaciones y búsquedas avanzadas son puntos clásicos de SQL dinámico inseguro.'
         },
         {
-          title: 'APIs con parámetros',
-          text: 'No importa si viene de un form, query param o JSON: el problema es cómo se arma la consulta.'
+          title: 'APIs JSON',
+          text: 'No importa si el dato llega por query string o por body. El fallo está en cómo se construye el SQL.'
         }
       ],
-      quickPayloads: [
+      searchPayloads: [
         { label: 'alice', value: 'alice' },
         { label: "' OR '1'='1", value: "' OR '1'='1" },
         { label: "admin' --", value: "admin' --" }
       ],
+      loginPayloads: [
+        { label: 'alice / password123', username: 'alice', password: 'password123' },
+        { label: "admin' -- / noimporta", username: "admin' --", password: 'noimporta' },
+        { label: "' OR '1'='1' -- / noimporta", username: "' OR '1'='1' --", password: 'noimporta' }
+      ],
       remediationPoints: [
         'Usar consultas parametrizadas o JPA seguro.',
-        'Separar claramente SQL y datos de usuario.',
+        'Separar de forma estricta SQL y datos de entrada.',
         'Reducir privilegios de la cuenta de base de datos.'
       ],
       sideBullets: [
         'La vulnerabilidad nace en el backend cuando se concatena la entrada dentro del SQL.',
-        'Un payload puede cambiar la lógica del WHERE y devolver filas no previstas.'
+        'En un GET suele alterar el filtro; en un POST de login puede producir bypass de autenticación.'
       ]
     }
   },
   computed: {
-    vulnerableQueryPreview () {
-      return `SELECT id, username, email, role FROM lab_users WHERE username = '${this.username}'`
+    searchVulnerableQueryPreview () {
+      return `SELECT id, username, email, role FROM lab_users WHERE username = '${this.searchUsername}'`
     },
-    secureQueryPreview () {
+    searchSecureQueryPreview () {
       return [
         'SQL: SELECT id, username, email, role FROM lab_users WHERE username = ?',
-        `Parametro 1: ${this.username === '' ? '(cadena vacia)' : this.username}`
+        `Parametro 1: ${this.searchUsername === '' ? '(cadena vacia)' : this.searchUsername}`
       ].join('\n')
     },
-    vulnerableExplanation () {
-      const value = this.username
+    loginVulnerableQueryPreview () {
+      return `SELECT id, username, email, role FROM lab_users WHERE username = '${this.loginForm.username}' AND password = '${this.loginForm.password}'`
+    },
+    loginSecureQueryPreview () {
+      return [
+        'SQL: SELECT id, username, email, role FROM lab_users WHERE username = ? AND password = ?',
+        `Parametro 1: ${this.loginForm.username === '' ? '(cadena vacia)' : this.loginForm.username}`,
+        `Parametro 2: ${this.loginForm.password === '' ? '(cadena vacia)' : this.loginForm.password}`
+      ].join('\n')
+    },
+    searchVulnerableExplanation () {
+      const value = this.searchUsername
 
       if (value === "' OR '1'='1") {
-        return 'El payload cierra la comilla original y añade una condición siempre verdadera. La búsqueda puede devolver múltiples usuarios porque el WHERE deja de comparar solo el username.'
+        return 'El payload cierra la comilla original y añade una condición siempre verdadera. El WHERE deja de buscar un usuario concreto y puede devolver múltiples filas.'
       }
 
       if (value === "admin' --") {
-        return 'El payload intenta cerrar la cadena y comentar el resto de la consulta. En muchos escenarios esto altera el SQL original o elimina parte de la condición esperada.'
+        return 'El payload intenta cerrar la cadena y comentar el resto. Aunque aquí el caso más típico es el bypass de login, sigue siendo una manipulación del SQL original.'
       }
 
       if (!value) {
-        return 'Aunque el valor esté vacío, el problema sigue siendo el mismo: la consulta se construye concatenando texto, y eso deja la puerta abierta a payloads más peligrosos.'
+        return 'Con una cadena vacía no hay bypass, pero el defecto sigue siendo el mismo: la consulta se arma concatenando texto del usuario.'
       }
 
-      return 'Con un valor normal la consulta parece funcionar, pero el defecto sigue ahí. El problema no se ve siempre a simple vista; aparece cuando un atacante envía un payload que modifica el SQL.'
+      return 'Con un valor normal parece una búsqueda legítima, pero la consulta sigue siendo vulnerable porque el usuario controla una parte del SQL final.'
     },
-    secureExplanation () {
-      const value = this.username || '(cadena vacia)'
-      return `El placeholder ? mantiene fija la estructura de la consulta. El valor "${value}" se envía como dato y no puede abrir comillas ni inyectar operadores SQL.`
+    searchSecureExplanation () {
+      const value = this.searchUsername || '(cadena vacia)'
+      return `El placeholder ? mantiene fijo el WHERE. El valor "${value}" viaja como dato y no puede alterar la lógica de la consulta.`
+    },
+    loginVulnerableExplanation () {
+      const username = this.loginForm.username
+
+      if (username === "admin' --") {
+        return 'El payload cierra la cadena de username y comenta el resto de la consulta. La comprobación del password puede quedar anulada y el backend aceptar el login sin conocer la contraseña real.'
+      }
+
+      if (username === "' OR '1'='1' --") {
+        return 'El payload introduce una condición siempre verdadera y después comenta el resto del WHERE. Eso puede convertir el login en un bypass si la consulta devuelve alguna fila.'
+      }
+
+      return 'Cuando username y password se concatenan dentro del SQL, el login deja de ser una validación de credenciales y pasa a ser una cadena manipulable por el atacante.'
+    },
+    loginSecureExplanation () {
+      return 'En la versión segura, username y password se envían como parámetros separados. Aunque uno de los campos contenga comillas, operadores o comentarios, la base de datos los trata como texto literal.'
     }
   },
   methods: {
     pretty (value) {
       return prettyJson(value)
     },
-    setPayload (value) {
-      this.username = value
+    setSearchPayload (value) {
+      this.searchUsername = value
+    },
+    setLoginPayload (payload) {
+      this.loginForm.username = payload.username
+      this.loginForm.password = payload.password
     },
     async searchVulnerable () {
-      this.loadingVulnerable = true
+      this.loadingSearchVulnerable = true
       try {
         const response = await this.$http.get(`${this.apiBaseUrl}/lab/sqli/users/search`, {
-          params: { username: this.username }
+          params: { username: this.searchUsername }
         })
-        this.vulnerableResult = response.data
-        this.vulnerableMessage = 'La búsqueda vulnerable ejecutó la consulta concatenada con el valor del usuario dentro del SQL.'
-        this.vulnerableOk = true
+        this.searchVulnerableResult = response.data
+        this.searchVulnerableMessage = 'El GET vulnerable ejecutó la consulta concatenando el valor del query param dentro del WHERE.'
+        this.searchVulnerableOk = true
       } catch (error) {
-        this.vulnerableResult = apiPayload(error)
-        this.vulnerableMessage = apiMessage(error)
-        this.vulnerableOk = false
+        this.searchVulnerableResult = apiPayload(error)
+        this.searchVulnerableMessage = apiMessage(error)
+        this.searchVulnerableOk = false
       } finally {
-        this.loadingVulnerable = false
+        this.loadingSearchVulnerable = false
       }
     },
     async searchSecure () {
-      this.loadingSecure = true
+      this.loadingSearchSecure = true
       try {
         const response = await this.$http.get(`${this.apiBaseUrl}/lab/sqli/users/search-secure`, {
-          params: { username: this.username }
+          params: { username: this.searchUsername }
         })
-        this.secureResult = response.data
-        this.secureMessage = 'La búsqueda segura mantuvo el SQL fijo y envió el valor del usuario como parámetro.'
-        this.secureOk = true
+        this.searchSecureResult = response.data
+        this.searchSecureMessage = 'El GET seguro mantuvo la consulta fija y envió username como parámetro.'
+        this.searchSecureOk = true
       } catch (error) {
-        this.secureResult = apiPayload(error)
-        this.secureMessage = apiMessage(error)
-        this.secureOk = false
+        this.searchSecureResult = apiPayload(error)
+        this.searchSecureMessage = apiMessage(error)
+        this.searchSecureOk = false
       } finally {
-        this.loadingSecure = false
+        this.loadingSearchSecure = false
+      }
+    },
+    async loginVulnerable () {
+      this.loadingLoginVulnerable = true
+      try {
+        const response = await this.$http.post(`${this.apiBaseUrl}/lab/sqli/login`, this.loginForm)
+        this.loginVulnerableResult = response.data
+        this.loginVulnerableMessage = response.data && response.data.authenticated
+          ? 'El POST vulnerable devolvió filas y el login queda bypassed o autenticado por una consulta alterada.'
+          : 'El POST vulnerable no autenticó en este intento, pero la consulta sigue siendo manipulable.'
+        this.loginVulnerableOk = !!(response.data && response.data.authenticated)
+      } catch (error) {
+        this.loginVulnerableResult = apiPayload(error)
+        this.loginVulnerableMessage = apiMessage(error)
+        this.loginVulnerableOk = false
+      } finally {
+        this.loadingLoginVulnerable = false
+      }
+    },
+    async loginSecure () {
+      this.loadingLoginSecure = true
+      try {
+        const response = await this.$http.post(`${this.apiBaseUrl}/lab/sqli/login-secure`, this.loginForm)
+        this.loginSecureResult = response.data
+        this.loginSecureMessage = response.data && response.data.authenticated
+          ? 'El POST seguro solo autenticó cuando username y password coinciden de verdad.'
+          : 'El POST seguro trató el payload como dato y no permitió el bypass.'
+        this.loginSecureOk = !!(response.data && response.data.authenticated)
+      } catch (error) {
+        this.loginSecureResult = apiPayload(error)
+        this.loginSecureMessage = apiMessage(error)
+        this.loginSecureOk = false
+      } finally {
+        this.loadingLoginSecure = false
       }
     }
   }
@@ -390,7 +605,7 @@ export default {
 }
 
 .json-box {
-  min-height: 120px;
+  min-height: 140px;
 }
 
 .code-box,
@@ -411,11 +626,16 @@ export default {
 }
 
 .didactic-stack {
-  min-height: 520px;
+  min-height: 560px;
+}
+
+.remediation-stack {
+  min-height: 0;
 }
 
 .mini-title,
-.code-caption {
+.code-caption,
+.flow-block__title {
   font-weight: 600;
   color: #1f2937;
   margin-bottom: 8px;
@@ -461,8 +681,16 @@ export default {
   margin-top: 8px;
 }
 
+.flow-block--spaced {
+  margin-top: 20px;
+}
+
 .result-card {
   box-shadow: none !important;
+}
+
+.full-height {
+  height: 100%;
 }
 
 .explanation-box {
@@ -495,6 +723,10 @@ export default {
 @media (max-width: 960px) {
   .context-grid {
     grid-template-columns: 1fr;
+  }
+
+  .didactic-stack {
+    min-height: 0;
   }
 }
 </style>
