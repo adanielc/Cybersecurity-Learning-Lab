@@ -97,7 +97,7 @@
               </v-card-text>
             </v-card>
 
-            <v-card outlined class="section-card mb-4">
+            <v-card v-if="showFormSection" outlined class="section-card mb-4">
               <v-card-title class="section-title">
                 Formulario de prueba
               </v-card-title>
@@ -106,7 +106,7 @@
               </v-card-text>
             </v-card>
 
-            <v-card outlined class="section-card mb-4">
+            <v-card v-if="showVulnerableResultSection" outlined class="section-card mb-4">
               <v-card-title class="section-title">
                 Resultado vulnerable
               </v-card-title>
@@ -117,7 +117,7 @@
               </v-card-text>
             </v-card>
 
-            <v-card outlined class="section-card mb-4">
+            <v-card v-if="showSecureResultSection" outlined class="section-card mb-4">
               <v-card-title class="section-title">
                 Resultado seguro
               </v-card-title>
@@ -189,6 +189,18 @@ export default {
     secureMethod: {
       type: String,
       default: 'GET'
+    },
+    showFormSection: {
+      type: Boolean,
+      default: true
+    },
+    showVulnerableResultSection: {
+      type: Boolean,
+      default: true
+    },
+    showSecureResultSection: {
+      type: Boolean,
+      default: true
     },
     remediationPoints: {
       type: Array,
