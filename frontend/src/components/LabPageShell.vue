@@ -325,7 +325,16 @@ export default {
   margin: 0 -8px;
 }
 
+.lab-practice > .col,
+.lab-practice > [class*='col-'] {
+  display: flex;
+}
+
 .practice-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   padding: 18px;
   border-radius: 12px;
   min-height: 180px;

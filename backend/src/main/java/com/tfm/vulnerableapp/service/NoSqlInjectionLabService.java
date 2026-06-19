@@ -62,7 +62,7 @@ public class NoSqlInjectionLabService {
          * comparacion exacta de credenciales.
          */
         List<NoSqlUserResponse> users = mongoTemplate
-            .find(rawQuery(body), Document.class, USERS_COLLECTION)
+            .find(buildVulnerableLoginQuery(body), Document.class, USERS_COLLECTION)
             .stream()
             .map(this::toUserResponse)
             .toList();
@@ -74,12 +74,8 @@ public class NoSqlInjectionLabService {
         String username = requireSafeString(request.username(), "username");
         String password = requireSafeString(request.password(), "password");
 
-        Query query = new Query()
-            .addCriteria(Criteria.where("username").is(username))
-            .addCriteria(Criteria.where("password").is(password));
-
         List<NoSqlUserResponse> users = mongoTemplate
-            .find(query, Document.class, USERS_COLLECTION)
+            .find(buildSecureLoginQuery(username, password), Document.class, USERS_COLLECTION)
             .stream()
             .map(this::toUserResponse)
             .toList();
@@ -94,7 +90,7 @@ public class NoSqlInjectionLabService {
          * busqueda y pueden exponer comentarios fuera del caso previsto.
          */
         return mongoTemplate
-            .find(rawQuery(body), Document.class, COMMENTS_COLLECTION)
+            .find(buildVulnerableCommentQuery(body), Document.class, COMMENTS_COLLECTION)
             .stream()
             .map(this::toCommentResponse)
             .toList();
@@ -103,23 +99,39 @@ public class NoSqlInjectionLabService {
     public List<NoSqlCommentResponse> searchCommentsSecure(NoSqlCommentSearchRequest request) {
         String text = requireSafeString(request.text(), "text");
 
-        Query query = new Query()
-            .addCriteria(Criteria.where("text").regex(Pattern.quote(text), "i"))
-            .addCriteria(Criteria.where("visibility").is("PUBLIC"));
-
         return mongoTemplate
-            .find(query, Document.class, COMMENTS_COLLECTION)
+            .find(buildSecureCommentQuery(text), Document.class, COMMENTS_COLLECTION)
             .stream()
             .map(this::toCommentResponse)
             .toList();
     }
 
-    private BasicQuery rawQuery(Map<String, Object> body) {
+    private BasicQuery buildVulnerableLoginQuery(Map<String, Object> body) {
+        return rawClientQuery(body, "login");
+    }
+
+    private BasicQuery buildVulnerableCommentQuery(Map<String, Object> body) {
+        return rawClientQuery(body, "busqueda");
+    }
+
+    private Query buildSecureLoginQuery(String username, String password) {
+        return new Query()
+            .addCriteria(Criteria.where("username").is(username))
+            .addCriteria(Criteria.where("password").is(password));
+    }
+
+    private Query buildSecureCommentQuery(String text) {
+        return new Query()
+            .addCriteria(Criteria.where("text").regex(Pattern.quote(text), "i"))
+            .addCriteria(Criteria.where("visibility").is("PUBLIC"));
+    }
+
+    private BasicQuery rawClientQuery(Map<String, Object> body, String scenario) {
         try {
             String json = objectMapper.writeValueAsString(body == null ? Map.of() : body);
             return new BasicQuery(Document.parse(json));
         } catch (JsonProcessingException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El JSON de busqueda no es valido", ex);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El JSON del escenario de " + scenario + " no es valido", ex);
         }
     }
 

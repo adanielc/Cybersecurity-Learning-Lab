@@ -1,4 +1,4 @@
-export const DEFAULT_API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8080/api'
+export const DEFAULT_API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8082/api'
 
 export function prettyJson (value) {
   if (value === null || value === undefined || value === '') {
