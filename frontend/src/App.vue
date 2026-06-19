@@ -22,6 +22,7 @@
           :to="item.to"
           router
           exact
+          class="drawer-list-item"
           @click="closeDrawerOnMobile"
         >
           <v-list-item-icon>

@@ -32,7 +32,12 @@ public class DataExposureLabController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<?>> listUsers() {
-        return ResponseEntity.ok(dataExposureLabService.listUsers());
+    public ResponseEntity<List<?>> vulnerableList() {
+        return ResponseEntity.ok(dataExposureLabService.listUsersVulnerable());
+    }
+
+    @GetMapping("/users-secure")
+    public ResponseEntity<List<PublicUserDto>> secureList() {
+        return ResponseEntity.ok(dataExposureLabService.listUsersSecure());
     }
 }

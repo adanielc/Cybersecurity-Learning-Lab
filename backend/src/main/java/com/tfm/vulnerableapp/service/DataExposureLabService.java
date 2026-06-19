@@ -85,8 +85,23 @@ public class DataExposureLabService {
         return new PublicUserDto(entity.getId(), entity.getUsername(), entity.getVisibleName());
     }
 
-    public List<?> listUsers() {
-            return dataExposureUserRepository.findAll();
+    /*
+     * VULNERABLE: un listado tambien puede sobreexponer datos si devuelve la
+     * entidad completa. El problema no depende de que sea detalle o coleccion,
+     * sino de que el contrato expone mas campos de los necesarios.
+     */
+    public List<DataExposureUserEntity> listUsersVulnerable() {
+        return dataExposureUserRepository.findAll();
+    }
+
+    /*
+     * SECURE: el listado proyecta cada registro a un DTO publico. Asi el
+     * backend controla exactamente que propiedades salen en el contrato.
+     */
+    public List<PublicUserDto> listUsersSecure() {
+        return dataExposureUserRepository.findAll().stream()
+            .map(entity -> new PublicUserDto(entity.getId(), entity.getUsername(), entity.getVisibleName()))
+            .toList();
     }
 
     private DataExposureUserEntity getUserEntityOrThrow(Long id) {
