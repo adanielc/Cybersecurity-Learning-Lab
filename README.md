@@ -27,6 +27,7 @@ Laboratorio educativo local para estudiar vulnerabilidades y remediaciones en un
 │       └── resources/application.yml
 ├── frontend/
 │   ├── Dockerfile
+│   ├── nginx/default.conf
 │   ├── package.json
 │   └── src/
 │       ├── components/
@@ -107,17 +108,17 @@ Las rutas bajo `/labs/...` siguen funcionando como alias heredados para no rompe
 
 Cada vista presenta una version vulnerable y una version segura del mismo caso de uso. El objetivo es comparar el error de concepcion y la remediacion tecnica:
 
-- SQL Injection: concatenacion insegura vs consultas parametrizadas.
-- NoSQL Injection: aceptar JSON arbitrario vs DTOs tipados.
+- SQL Injection: concatenacion insegura en busqueda y login vs consultas parametrizadas.
+- NoSQL Injection: aceptar JSON arbitrario y operadores MongoDB vs DTOs tipados y validacion de entradas.
 - BOLA / IDOR: confiar en el ID de la URL vs validar ownership y rol.
 - JWT: decodificar claims sin validar vs verificar firma, expiracion y proposito.
 - CORS: politica amplia vs origenes y metodos restringidos.
 - Excessive Data Exposure: devolver entidades completas vs DTOs publicos.
 - Docker inseguro: puertos de datos publicados, contenedores root y ausencia de aislamiento.
 - Rate Limiting: permitir intentos ilimitados vs responder con HTTP 429.
-- XSS: renderizar HTML sin sanitizar vs escapar o neutralizar contenido.
+- XSS: renderizar HTML sin escapar vs neutralizar la salida antes de que el navegador la interprete.
 - Almacenamiento de tokens: localStorage vs memoria o cookie HttpOnly.
-- Broken Authentication: mensajes reveladores y contrasenas debiles vs errores genericos y BCrypt.
+- Broken Authentication: mensajes reveladores y contrasenas debiles vs errores genericos, BCrypt y limitacion temporal de intentos.
 
 ## Laboratorio de Docker inseguro
 
@@ -125,7 +126,7 @@ El archivo `docker-compose.insecure.yml` levanta una variante pensada para demos
 despliegue:
 
 - PostgreSQL y MongoDB quedan expuestos al host.
-- El backend se ejecuta como `root`.
+- Backend y frontend se ejecutan como `root`.
 - No hay healthchecks.
 - La red no está aislada como en un entorno endurecido.
 - Las credenciales son de laboratorio y no deben usarse fuera de un entorno controlado.
@@ -136,8 +137,8 @@ Una vez levantado el compose inseguro, puedes comprobar que los servicios sensib
 sin pasar por la API:
 
 ```bash
-psql -h localhost -p 5432 -U tfm_user -d tfm_lab
-mongosh "mongodb://vulnlab:vulnlab@localhost:27017/tfm_lab?authSource=admin"
+psql -h localhost -p 5432 -U postgres_admin -d postgres_db
+mongosh "mongodb://mongo_admin:mongo_pass@localhost:27017/mongo_db?authSource=admin"
 ```
 
 ### Cómo evitarlo
@@ -164,6 +165,8 @@ mongosh "mongodb://vulnlab:vulnlab@localhost:27017/tfm_lab?authSource=admin"
 | --- | --- | --- |
 | GET | `/api/lab/sqli/users/search` | Busqueda vulnerable por `username`. |
 | GET | `/api/lab/sqli/users/search-secure` | Busqueda segura parametrizada. |
+| POST | `/api/lab/sqli/login` | Login vulnerable con concatenacion directa de `username` y `password`. |
+| POST | `/api/lab/sqli/login-secure` | Login seguro con placeholders de `JdbcTemplate`. |
 
 ### NoSQL Injection
 
@@ -188,8 +191,8 @@ Los endpoints seguros de BOLA usan las cabeceras educativas `X-Lab-User-Id`, `X-
 
 | Metodo | Ruta | Descripcion |
 | --- | --- | --- |
-| POST | `/api/lab/token-storage/login` | Emite un JWT de laboratorio. |
-| GET | `/api/lab/token-storage/me` | Valida y devuelve el usuario autenticado. |
+| POST | `/api/lab/token-storage/login` | Emite un JWT de laboratorio y permite entrega por cabecera o cookie HttpOnly. |
+| GET | `/api/lab/token-storage/me` | Valida el token enviado por `Authorization: Bearer` o por cookie HttpOnly. |
 
 > La vista `/lab/jwt` se centra en la validacion del token y usa los mismos endpoints de emision y verificacion.
 
@@ -208,6 +211,7 @@ Los endpoints seguros de BOLA usan las cabeceras educativas `X-Lab-User-Id`, `X-
 | GET | `/api/lab/exposure/users/{id}` | Devuelve la entidad completa de usuario. |
 | GET | `/api/lab/exposure/users-secure/{id}` | Devuelve un DTO publico reducido. |
 | GET | `/api/lab/exposure/users` | Listado completo vulnerable. |
+| GET | `/api/lab/exposure/users-secure` | Listado seguro proyectado a DTO publico. |
 
 ### Rate Limiting
 
@@ -215,23 +219,24 @@ Los endpoints seguros de BOLA usan las cabeceras educativas `X-Lab-User-Id`, `X-
 | --- | --- | --- |
 | POST | `/api/lab/rate-limit/login-insecure` | Login sin limite de intentos. |
 | POST | `/api/lab/rate-limit/login-secure` | Login con limite temporal y HTTP 429. |
-| GET | `/api/lab/rate-limit/status` | Estado del contador y la ventana activa. |
+| GET | `/api/lab/rate-limit/state` | Estado del bucket para un `username` e IP. |
+| POST | `/api/lab/rate-limit/reset` | Reinicia el bucket del laboratorio para un `username` e IP. |
 
 ### XSS
 
 | Metodo | Ruta | Descripcion |
 | --- | --- | --- |
-| POST | `/api/lab/xss/comments` | Guarda comentarios sin sanitizar. |
+| POST | `/api/lab/xss/comments` | Guarda y devuelve comentarios sin escapar. |
 | GET | `/api/lab/xss/comments` | Lee comentarios vulnerables. |
-| POST | `/api/lab/xss/comments-secure` | Guarda comentarios neutralizados. |
-| GET | `/api/lab/xss/comments-secure` | Lee comentarios neutralizados. |
+| POST | `/api/lab/xss/comments-secure` | Devuelve el contenido escapado en la respuesta segura. |
+| GET | `/api/lab/xss/comments-secure` | Lee comentarios con contenido escapado. |
 
 ### Broken Authentication
 
 | Metodo | Ruta | Descripcion |
 | --- | --- | --- |
 | POST | `/api/lab/auth/login-insecure` | Login vulnerable con mensajes reveladores. |
-| POST | `/api/lab/auth/login-secure` | Login seguro con mensajes genericos. |
+| POST | `/api/lab/auth/login-secure` | Login seguro con mensajes genericos, BCrypt y bloqueo temporal por intentos fallidos. |
 | POST | `/api/lab/auth/register-insecure` | Registro vulnerable con contrasenas debiles. |
 | POST | `/api/lab/auth/register-secure` | Registro seguro con politica de contrasena. |
 
@@ -248,8 +253,8 @@ Variables principales de entorno:
 - `POSTGRES_DB`
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
-- `MONGO_INITDB_ROOT_USERNAME`
-- `MONGO_INITDB_ROOT_PASSWORD`
+- `MONGO_INIT_DB_ROOT_USERNAME`
+- `MONGO_INIT_DB_ROOT_PASSWORD`
 - `MONGO_DATABASE`
 
 ## Notas de seguridad
