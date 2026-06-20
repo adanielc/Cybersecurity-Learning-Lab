@@ -1,4 +1,4 @@
-package com.tfm.vulnerableapp.controller;
+package com.tfm.vulnerableapp.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
