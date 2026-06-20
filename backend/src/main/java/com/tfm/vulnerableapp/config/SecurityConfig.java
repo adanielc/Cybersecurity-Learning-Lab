@@ -23,12 +23,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    CorsConfigurationSource corsConfigurationSource,
-                                                   LabJwtAuthenticationFilter labJwtAuthenticationFilter) throws Exception {
+                                                   LabJwtAuthenticationFilter labJwtAuthenticationFilter,
+                                                   LabIdentityFilter labIdentityFilter) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(labJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(labIdentityFilter, LabJwtAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/health", "/actuator/health").permitAll()
                         .anyRequest().permitAll())
@@ -39,6 +41,11 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public LabIdentityFilter labIdentityFilter() {
+        return new LabIdentityFilter();
     }
 
     @Bean
