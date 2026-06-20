@@ -196,17 +196,7 @@ body {
 .drawer-list {
   display: flex;
   flex-direction: column;
-  min-height: calc(100% - 104px);
   padding-bottom: 12px;
-}
-
-.drawer-account {
-  margin-top: auto;
-  padding-bottom: 8px;
-}
-
-.drawer-account__subheader {
-  margin-top: 12px;
 }
 
 .drawer-hero {
@@ -298,11 +288,6 @@ body {
 .app-bar-brand__subtitle {
   font-size: 0.78rem;
   opacity: 0.84;
-}
-
-.app-bar-user {
-  border-color: rgba(255, 255, 255, 0.45) !important;
-  color: #ffffff !important;
 }
 
 .app-footer {

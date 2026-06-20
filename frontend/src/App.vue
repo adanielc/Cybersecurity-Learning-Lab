@@ -32,22 +32,6 @@
             <v-list-item-title>{{ item.label }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-
-        <v-subheader class="drawer-account__subheader">Cuenta</v-subheader>
-        <v-list-item class="drawer-account">
-          <v-list-item-icon>
-            <v-icon>mdi-account-circle</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>{{ userLabel }}</v-list-item-title>
-            <v-list-item-subtitle>Sesión de laboratorio</v-list-item-subtitle>
-            <v-list-item-subtitle v-if="userLabel !== 'Invitado'">
-              <v-btn text x-small color="primary" class="px-0" @click="logout">
-                Cerrar sesión
-              </v-btn>
-            </v-list-item-subtitle>
-          </v-list-item-content>
-        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -62,11 +46,6 @@
           <div class="app-bar-brand__subtitle">Entorno educativo para APIs modernas</div>
         </div>
       </div>
-      <v-spacer />
-      <v-chip outlined color="white" class="app-bar-user">
-        <v-icon left small>mdi-account-outline</v-icon>
-        {{ userLabel }}
-      </v-chip>
     </v-app-bar>
 
     <v-main>
@@ -94,7 +73,6 @@ export default {
   data () {
     return {
       drawer: false,
-      userLabel: 'Invitado',
       currentYear: new Date().getFullYear(),
       labLinks: [
         { label: 'Dashboard', to: '/', icon: 'mdi-view-dashboard-outline' },
@@ -112,56 +90,11 @@ export default {
       ]
     }
   },
-  created () {
-    this.loadUserLabel()
-    window.addEventListener('storage', this.onStorageChange)
-    window.addEventListener('tfm-auth-updated', this.onAuthUpdated)
-  },
-  beforeDestroy () {
-    window.removeEventListener('storage', this.onStorageChange)
-    window.removeEventListener('tfm-auth-updated', this.onAuthUpdated)
-  },
   methods: {
     closeDrawerOnMobile () {
       if (this.$vuetify.breakpoint.smAndDown) {
         this.drawer = false
       }
-    },
-    loadUserLabel () {
-      const sessionLabel = window.sessionStorage.getItem('tfm_lab_session_user')
-      if (sessionLabel) {
-        this.userLabel = sessionLabel
-        return
-      }
-
-      const token = window.localStorage.getItem('tfm_lab_jwt')
-      if (!token) {
-        this.userLabel = 'Invitado'
-        return
-      }
-
-      try {
-        const payloadSegment = token.split('.')[1] || ''
-        const normalized = payloadSegment.replace(/-/g, '+').replace(/_/g, '/')
-        const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
-        const payload = JSON.parse(atob(padded))
-        this.userLabel = payload.name || payload.username || 'Sesión de laboratorio'
-      } catch (error) {
-        this.userLabel = 'Sesión de laboratorio'
-      }
-    },
-    onStorageChange () {
-      this.loadUserLabel()
-    },
-    onAuthUpdated () {
-      this.loadUserLabel()
-    },
-    logout () {
-      window.localStorage.removeItem('tfm_lab_jwt')
-      window.localStorage.removeItem('tfm_lab_session_user')
-      window.sessionStorage.removeItem('tfm_lab_session_user')
-      this.userLabel = 'Invitado'
-      window.dispatchEvent(new Event('tfm-auth-updated'))
     }
   }
 }

@@ -582,9 +582,6 @@ export default {
     extractError (error) {
       return apiMessage(error)
     },
-    emitAuthUpdate () {
-      window.dispatchEvent(new Event('tfm-auth-updated'))
-    },
     async loginVulnerable () {
       this.loading.vulnerableLogin = true
       try {
@@ -601,7 +598,6 @@ export default {
         this.vulnerableMessage = 'El token vulnerable se guardo en localStorage.'
         this.vulnerableOk = true
         this.activeMode = 'vulnerable'
-        this.emitAuthUpdate()
       } catch (error) {
         this.vulnerableResult = apiPayload(error)
         this.vulnerableMessage = this.extractError(error)
@@ -631,7 +627,6 @@ export default {
           : 'Login seguro con token en memoria. Reduce persistencia, pero no oculta el token al mismo JavaScript de la pagina.'
         this.secureOk = true
         this.activeMode = cookieMode ? 'secure-cookie' : 'secure-memory'
-        this.emitAuthUpdate()
       } catch (error) {
         this.secureResult = apiPayload(error)
         this.secureMessage = this.extractError(error)
@@ -699,7 +694,6 @@ export default {
       this.readMessage = ''
       this.activeMode = 'none'
       window.localStorage.removeItem(TOKEN_KEY)
-      this.emitAuthUpdate()
     }
   }
 }
