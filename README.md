@@ -76,6 +76,8 @@ docker compose -f docker-compose.insecure.yml up --build
 - PostgreSQL: `localhost:5432`
 - MongoDB: `localhost:27018`
 
+> El compose seguro y el inseguro comparten los mismos puertos de frontend y backend para no cambiar la URL de la SPA. La diferencia didáctica es que solo el compose inseguro publica PostgreSQL y MongoDB al host.
+
 ### Servicios del compose actual
 
 | Servicio | Puerto contenedor | Puerto host | Observacion |
@@ -90,6 +92,7 @@ docker compose -f docker-compose.insecure.yml up --build
 Las vistas principales de la SPA son estas:
 
 - `/` - Dashboard
+- `/dashboard/seed-data` - Seed data de PostgreSQL y MongoDB
 - `/lab/sqli` - SQL Injection
 - `/lab/nosqli` - NoSQL Injection
 - `/lab/bola` - BOLA / IDOR
@@ -161,6 +164,7 @@ quedan solo en la red interna Docker.
 | GET | `/api/health` | Estado basico de la API. |
 | GET | `/actuator/health` | Health check de Spring Boot Actuator. |
 | GET | `/actuator/info` | Informacion basica del proceso y la aplicacion. |
+| GET | `/api/dashboard/seed-data` | Devuelve tablas SQL y colecciones NoSQL educativas para la vista Seed data. |
 
 ### SQL Injection
 
