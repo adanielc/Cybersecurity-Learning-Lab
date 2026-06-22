@@ -10,28 +10,9 @@
           <p class="hero-banner__subtitle">
             Entorno práctico para el estudio de vulnerabilidades en APIs REST, JWT, SQL y NoSQL.
           </p>
-          <div class="hero-banner__actions">
-            <v-btn color="primary" dark :to="firstLabRoute" class="mr-3">
-              Ir al laboratorio
-            </v-btn>
-            <v-btn color="primary" dark :to="'/lab/jwt'">
-              Ver JWT
-            </v-btn>
-          </div>
+
         </v-col>
-        <v-col cols="12" lg="4">
-          <v-card class="hero-panel">
-            <v-card-text>
-              <div class="hero-panel__label">Estado del backend</div>
-              <div class="hero-panel__value">{{ health ? health.status : 'PENDING' }}</div>
-              <div class="hero-panel__meta">{{ apiBaseUrl }}</div>
-              <v-btn text small color="primary" class="px-0 mt-2" :loading="loading" @click="loadHealth">
-                <v-icon left small>mdi-refresh</v-icon>
-                Actualizar estado
-              </v-btn>
-            </v-card-text>
-          </v-card>
-        </v-col>
+
       </v-row>
     </v-sheet>
 
@@ -64,30 +45,19 @@
           <v-divider />
           <v-card-text>
             <v-row>
-              <v-col cols="12" md="6" v-for="item in objectives" :key="item.title">
-                <v-card outlined class="objective-card">
-                  <v-card-text>
-                    <div class="objective-card__title">{{ item.title }}</div>
-                    <div class="objective-card__text">{{ item.text }}</div>
-                  </v-card-text>
-                </v-card>
+              <v-col cols="12" md="6" lg="4" v-for="item in featuredLabs" :key="item.name">
+                <vulnerability-card
+                    :name="item.name"
+                    :description="item.description"
+                    :severity="item.severity"
+                    :owasp="item.owasp"
+                    :icon="item.icon"
+                    :to="item.to"
+                />
               </v-col>
             </v-row>
           </v-card-text>
         </v-card>
-      </v-col>
-    </v-row>
-
-    <v-row class="mt-4">
-      <v-col cols="12" md="6" lg="4" v-for="item in featuredLabs" :key="item.name">
-        <vulnerability-card
-          :name="item.name"
-          :description="item.description"
-          :severity="item.severity"
-          :owasp="item.owasp"
-          :icon="item.icon"
-          :to="item.to"
-        />
       </v-col>
     </v-row>
   </v-container>
@@ -110,24 +80,6 @@ export default {
         { title: 'Vulnerabilidades implementadas', value: '11+', subtitle: 'Laboratorios activos', icon: 'mdi-bug-outline' },
         { title: 'Estado del backend', value: 'PENDING', subtitle: 'API REST disponible', icon: 'mdi-server-outline' },
         { title: 'Usuarios registrados', value: 'Seed data', subtitle: 'Datos educativos', icon: 'mdi-account-group-outline' }
-      ],
-      objectives: [
-        {
-          title: 'Aprendizaje guiado',
-          text: 'Cada laboratorio muestra la versión vulnerable y la remediación segura con el mismo recorrido funcional.'
-        },
-        {
-          title: 'Comparativa realista',
-          text: 'La interfaz representa un portal institucional para ayudar a contextualizar el ejercicio en un entorno académico.'
-        },
-        {
-          title: 'Seguridad aplicada',
-          text: 'Las vulnerabilidades quedan confinadas al laboratorio local sin lógica destructiva ni exposición externa.'
-        },
-        {
-          title: 'Verificación continua',
-          text: 'El dashboard expone el estado del backend y el acceso a los módulos prácticos.'
-        }
       ],
       featuredLabs: [
         {

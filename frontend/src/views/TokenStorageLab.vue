@@ -335,7 +335,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             El token puede ser valido criptograficamente y aun asi quedar demasiado expuesto por como se almacena en el
             navegador. Aqui el fallo es de superficie de robo, no de firma JWT.

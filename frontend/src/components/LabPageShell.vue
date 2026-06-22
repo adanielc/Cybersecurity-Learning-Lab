@@ -33,24 +33,6 @@
               </v-card-text>
             </v-card>
 
-            <v-row class="mb-5">
-              <v-col cols="12" md="6">
-                <endpoint-card
-                  :method="vulnerableMethod"
-                  :endpoint="vulnerableEndpoint"
-                  :description="vulnerableHint"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <endpoint-card
-                  :method="secureMethod"
-                  :endpoint="secureEndpoint"
-                  :description="secureHint"
-                  secure
-                />
-              </v-col>
-            </v-row>
-
             <v-card outlined class="section-card mb-4">
               <v-card-title class="section-title">
                 Información
@@ -72,6 +54,26 @@
                 </div>
               </v-card-text>
             </v-card>
+
+            <v-row class="mb-5">
+              <v-col cols="12" md="6">
+                <endpoint-card
+                  :method="vulnerableMethod"
+                  :endpoint="vulnerableEndpoint"
+                  :description="vulnerableHint"
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <endpoint-card
+                  :method="secureMethod"
+                  :endpoint="secureEndpoint"
+                  :description="secureHint"
+                  secure
+                />
+              </v-col>
+            </v-row>
+
+
 
             <v-card outlined class="section-card mb-4">
               <v-card-title class="section-title">

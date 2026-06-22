@@ -349,7 +349,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             En SQLi y NoSQLi el atacante intenta alterar una consulta. En BOLA / IDOR el atacante prueba si puede leer
             o modificar objetos ajenos cambiando solo un identificador válido.

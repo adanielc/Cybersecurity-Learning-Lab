@@ -352,7 +352,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             Un JWT puede ser legible y seguir siendo seguro si el backend lo verifica correctamente. El riesgo aparece
             cuando alguien confunde “puedo leerlo” con “puedo confiar en él”.

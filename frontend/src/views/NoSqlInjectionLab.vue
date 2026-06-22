@@ -361,7 +361,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             En SQL Injection el ataque intenta romper una sentencia textual. En NoSQL Injection el riesgo suele estar en
             dejar que el cliente defina operadores y estructura de la query documental.

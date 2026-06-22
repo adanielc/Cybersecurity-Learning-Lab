@@ -306,7 +306,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             En SQLi o NoSQLi el atacante altera la consulta. En CORS el problema está en qué orígenes pueden leer la
             respuesta desde el navegador, aunque la API siga siendo la misma.

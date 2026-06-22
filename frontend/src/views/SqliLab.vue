@@ -342,7 +342,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             La diferencia entre GET y POST aquí no es de seguridad. El riesgo aparece cuando el backend convierte la
             entrada del usuario en parte de la sentencia SQL, ya sea en una búsqueda o en un login.

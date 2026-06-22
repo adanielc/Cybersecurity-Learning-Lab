@@ -340,7 +340,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             En XSS el atacante no busca cambiar la consulta del backend. Busca que el navegador del usuario ejecute o
             interprete como activo un contenido que debia tratarse como texto no confiable.

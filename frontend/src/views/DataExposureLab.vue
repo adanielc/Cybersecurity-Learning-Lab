@@ -329,7 +329,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             Aqui el atacante no altera la consulta. El problema es que la propia respuesta ya trae demasiada
             informacion porque el backend expone mas campos de los necesarios.

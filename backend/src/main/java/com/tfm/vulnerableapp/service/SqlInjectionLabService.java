@@ -12,7 +12,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class SqlInjectionLabService {
 
-    private static final RowMapper<SqlInjectionUserResponse> USER_ROW_MAPPER = (rs, rowNum) -> new SqlInjectionUserResponse(
+    private static final RowMapper<SqlInjectionUserResponse> USER_ROW_MAPPER =
+            (rs, rowNum) -> new SqlInjectionUserResponse(
             rs.getLong("id"),
             rs.getString("username"),
             rs.getString("email"),
@@ -40,11 +41,16 @@ public class SqlInjectionLabService {
 
         Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM lab_users", Integer.class);
         if (count == null || count == 0) {
-            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)", "admin", "admin@lab.local", "ADMIN", "admin123");
-            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)", "alice", "alice@lab.local", "USER", "password123");
-            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)", "bob", "bob@lab.local", "USER", "password123");
-            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)", "auditor", "auditor@lab.local", "ADMIN", "audit123");
-            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)", "charlie", "charlie@lab.local", "USER", "charlie123");
+            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)",
+                    "admin", "admin@lab.local", "ADMIN", "admin123");
+            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)",
+                    "alice", "alice@lab.local", "USER", "password123");
+            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)",
+                    "bob", "bob@lab.local", "USER", "password123");
+            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)",
+                    "auditor", "auditor@lab.local", "ADMIN", "audit123");
+            jdbcTemplate.update("INSERT INTO lab_users (username, email, role, password) VALUES (?, ?, ?, ?)",
+                    "charlie", "charlie@lab.local", "USER", "charlie123");
         }
 
         seedPasswordIfMissing("admin", "admin123");

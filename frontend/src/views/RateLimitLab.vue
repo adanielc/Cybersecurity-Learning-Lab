@@ -338,7 +338,7 @@
         </div>
 
         <div>
-          <div class="mini-title">Idea clave para el alumno</div>
+          <div class="mini-title">Idea clave</div>
           <p class="mini-text mb-0">
             Aqui el atacante no cambia la consulta ni el objeto. Lo que explota es la capacidad de repetir muchas veces
             el mismo endpoint sensible hasta adivinar una credencial o agotar un diccionario.

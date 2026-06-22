@@ -43,15 +43,21 @@ public class NoSqlInjectionLabService {
             mongoTemplate.createCollection(COMMENTS_COLLECTION);
         }
 
-        seedUser("user-admin", "admin", "adminpass", "admin@vulnerable-lab.local", "ADMIN");
-        seedUser("user-alice", "alice", "password123", "alice@vulnerable-lab.local", "USER");
-        seedUser("user-bob", "bob", "password123", "bob@vulnerable-lab.local", "USER");
-        seedUser("user-auditor", "auditor", "auditpass", "auditor@vulnerable-lab.local", "ADMIN");
+        seedUser("user-admin", "admin", "adminpass",
+                "admin@vulnerable-lab.local", "ADMIN");
+        seedUser("user-alice", "alice", "password123",
+                "alice@vulnerable-lab.local", "USER");
+        seedUser("user-bob", "bob", "password123",
+                "bob@vulnerable-lab.local", "USER");
+        seedUser("user-auditor", "auditor", "auditpass",
+                "auditor@vulnerable-lab.local", "ADMIN");
 
         seedComment("comment-1", "alice", "Public comment about REST APIs", "PUBLIC");
-        seedComment("comment-2", "bob", "MongoDB filters are powerful when controlled by the backend", "PUBLIC");
+        seedComment("comment-2", "bob", "MongoDB filters are powerful when controlled by the backend",
+                "PUBLIC");
         seedComment("comment-3", "admin", "Internal moderation note for admins", "PRIVATE");
-        seedComment("comment-4", "auditor", "Security review: never trust arbitrary JSON operators", "PRIVATE");
+        seedComment("comment-4", "auditor", "Security review: never trust arbitrary JSON operators",
+                "PRIVATE");
     }
 
     public NoSqlLoginResponse loginVulnerable(Map<String, Object> body) {
@@ -131,7 +137,8 @@ public class NoSqlInjectionLabService {
             String json = objectMapper.writeValueAsString(body == null ? Map.of() : body);
             return new BasicQuery(Document.parse(json));
         } catch (JsonProcessingException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El JSON del escenario de " + scenario + " no es valido", ex);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El JSON del escenario de " + scenario + " no es valido", ex);
         }
     }
 
