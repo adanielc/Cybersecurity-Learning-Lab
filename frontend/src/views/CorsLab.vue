@@ -442,7 +442,8 @@ export default {
         'GET /api/lab/cors/secure-private-data',
         '',
         `Origin simulado: ${this.normalizedOriginHint}`,
-        `Origen permitido por la política segura: ${this.secureAllowedOrigins.join(', ')}`
+        `Origen permitido por la política segura: ${this.secureAllowedOrigins.join(', ')}`,
+        `Lectura esperada desde navegador: ${this.secureReadAllowed ? 'permitida' : 'bloqueada por CORS'}`
       ].join('\n')
     },
     vulnerablePreview () {
@@ -527,9 +528,21 @@ export default {
     async loadSecurePrivateData () {
       this.loading.securePrivateData = true
       try {
+        if (!this.secureReadAllowed) {
+          this.secureResult = {
+            blockedByBrowser: true,
+            simulatedOrigin: this.normalizedOriginHint,
+            allowedOrigins: this.secureAllowedOrigins,
+            reason: 'El navegador no entregaría el cuerpo a JavaScript porque el origen simulado no está permitido por CORS.'
+          }
+          this.secureMessage = 'Lectura bloqueada en la simulación: un origen no permitido no debería poder leer esta respuesta.'
+          this.secureOk = false
+          return
+        }
+
         const response = await this.$http.get(`${this.apiBaseUrl}/lab/cors/secure-private-data`)
         this.secureResult = response.data
-        this.secureMessage = 'El endpoint seguro devolvió el dato bajo una política CORS restrictiva.'
+        this.secureMessage = 'El endpoint seguro devolvió el dato y el origen simulado coincide con la allowlist.'
         this.secureOk = true
       } catch (error) {
         this.secureResult = apiPayload(error)
