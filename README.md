@@ -66,15 +66,15 @@ docker compose -f docker-compose.insecure.yml up --build
 - API health: http://localhost:8082/api/health
 - Spring Actuator health: http://localhost:8082/actuator/health
 - Spring Actuator info: http://localhost:8082/actuator/info
-- PostgreSQL: `localhost:5432`
-- MongoDB: `localhost:27018`
+- PostgreSQL: no publicado al host
+- MongoDB: no publicado al host
 
 ### URLs del compose inseguro
 
-- Frontend: http://localhost:8080
-- Backend: http://localhost:8081
+- Frontend: http://localhost:8083
+- Backend: http://localhost:8082
 - PostgreSQL: `localhost:5432`
-- MongoDB: `localhost:27017`
+- MongoDB: `localhost:27018`
 
 ### Servicios del compose actual
 
@@ -82,8 +82,8 @@ docker compose -f docker-compose.insecure.yml up --build
 | --- | --- | --- | --- |
 | frontend | 80 | 8083 | SPA servida por Nginx |
 | backend | 8080 | 8082 | Spring Boot REST API |
-| postgres | 5432 | 5432 | Persistencia relacional |
-| mongo | 27017 | 27018 | Persistencia documental |
+| postgres | 5432 | no publicado | Persistencia relacional interna |
+| mongo | 27017 | no publicado | Persistencia documental interna |
 
 ## Rutas del frontend
 
@@ -138,8 +138,11 @@ sin pasar por la API:
 
 ```bash
 psql -h localhost -p 5432 -U postgres_admin -d postgres_db
-mongosh "mongodb://mongo_admin:mongo_pass@localhost:27017/mongo_db?authSource=admin"
+mongosh "mongodb://mongo_admin:mongo_pass@localhost:27018/mongo_db?authSource=admin"
 ```
+
+En cambio, con `docker-compose.yml` ese mismo acceso directo debe fallar desde el host porque PostgreSQL y MongoDB
+quedan solo en la red interna Docker.
 
 ### Cómo evitarlo
 

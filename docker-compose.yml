@@ -5,8 +5,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-postgres_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres_admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_pass}
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -21,8 +21,8 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INIT_DB_ROOT_USERNAME:-mongo_admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INIT_DB_ROOT_PASSWORD:-mongo_pass}
       MONGO_DATABASE: ${MONGO_DATABASE:-mongo_db}
-    ports:
-      - "27018:27017"
+    expose:
+      - "27017"
     volumes:
       - mongo_data:/data/db
     healthcheck:

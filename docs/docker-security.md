@@ -10,8 +10,8 @@ El fichero activo es `docker-compose.yml` y levanta:
 
 - `frontend` en `http://localhost:8083`
 - `backend` en `http://localhost:8082`
-- `postgres` en `localhost:5432`
-- `mongo` en `localhost:27018`
+- `postgres` solo en la red interna Docker
+- `mongo` solo en la red interna Docker
 
 Los servicios de datos usan volumenes persistentes y healthchecks. El backend
 se ejecuta como usuario no root en la configuracion actual.
@@ -23,9 +23,9 @@ host y quita varias medidas de endurecimiento para que el alumno pueda
 observar el problema de forma directa:
 
 - PostgreSQL publicado en `localhost:5432`.
-- MongoDB publicado en `localhost:27017`.
-- Backend publicado en `localhost:8081` y ejecutado como `root`.
-- Frontend publicado en `localhost:8080`.
+- MongoDB publicado en `localhost:27018`.
+- Backend publicado en `localhost:8082` y ejecutado como `root`.
+- Frontend publicado en `localhost:8083`.
 - Sin healthchecks.
 - Sin aislamiento de red adicional.
 
@@ -40,6 +40,7 @@ docker compose -f docker-compose.insecure.yml up --build
 ## Principios de seguridad aplicados
 
 - Separacion de frontend, backend y bases de datos en servicios distintos.
+- PostgreSQL y MongoDB sin publicacion al host en el compose controlado.
 - Uso de variables de entorno para configuracion sensible.
 - Healthchecks para coordinar el arranque.
 - Ejecutar la aplicacion como usuario no root cuando es viable.

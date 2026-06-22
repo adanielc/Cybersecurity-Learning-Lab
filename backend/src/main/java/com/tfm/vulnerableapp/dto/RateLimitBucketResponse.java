@@ -1,5 +1,7 @@
 package com.tfm.vulnerableapp.dto;
 
+import java.util.List;
+
 public record RateLimitBucketResponse(
     String username,
     String clientIp,
@@ -7,6 +9,8 @@ public record RateLimitBucketResponse(
     int remainingAttempts,
     int maxFailedAttempts,
     long windowSeconds,
-    boolean limited
+    boolean limited,
+    int trackedBuckets,
+    List<RateLimitBucketEntryResponse> activeBuckets
 ) {
 }

@@ -248,6 +248,43 @@
                   </div>
                   <pre class="json-box mt-4">{{ pretty(secureResult) }}</pre>
                   <div class="mini-title mt-4">Estado del bucket</div>
+                  <div class="bucket-overview">
+                    <div class="bucket-overview__item">
+                      <span class="bucket-overview__label">Clave actual</span>
+                      <strong>{{ bucketLabel }}</strong>
+                    </div>
+                    <div class="bucket-overview__item">
+                      <span class="bucket-overview__label">IPs activas vistas</span>
+                      <strong>{{ bucketEntries.length }}</strong>
+                    </div>
+                    <div class="bucket-overview__item">
+                      <span class="bucket-overview__label">Fallos IP actual</span>
+                      <strong>{{ stateSummary ? stateSummary.failedAttempts : 0 }}</strong>
+                    </div>
+                  </div>
+                  <div class="mini-title mt-4">IPs registradas en el bucket</div>
+                  <v-alert v-if="!bucketEntries.length" type="info" outlined dense>
+                    Todavia no hay IPs registradas para este username dentro del bucket visible.
+                  </v-alert>
+                  <div v-else class="bucket-entry-list">
+                    <div
+                      v-for="entry in bucketEntries"
+                      :key="entry.bucketKey"
+                      class="bucket-entry"
+                      :class="{ 'bucket-entry--current': entry.clientIp === normalizedClientIp, 'bucket-entry--limited': entry.limited }"
+                    >
+                      <div class="bucket-entry__header">
+                        <strong>{{ entry.clientIp }}</strong>
+                        <span>{{ entry.limited ? 'Limitada' : 'Activa' }}</span>
+                      </div>
+                      <div class="bucket-entry__meta">Bucket: {{ entry.bucketKey }}</div>
+                      <div class="bucket-entry__stats">
+                        <span>Fallos: {{ entry.failedAttempts }}</span>
+                        <span>Restantes: {{ entry.remainingAttempts }}</span>
+                        <span>Timestamps: {{ entry.failureTimestamps.length }}</span>
+                      </div>
+                    </div>
+                  </div>
                   <pre class="json-box">{{ pretty(stateResult) }}</pre>
                 </v-card-text>
               </v-card>
@@ -375,6 +412,7 @@ export default {
       burstVulnerableResult: null,
       burstSecureResult: null,
       stateResult: null,
+      observedBucketsByKey: {},
       vulnerableMessage: '',
       secureMessage: '',
       burstVulnerableMessage: '',
@@ -461,18 +499,47 @@ export default {
     }
   },
   computed: {
+    normalizedClientIp () {
+      return this.normalizeValue(this.clientIp)
+    },
+    normalizedUsername () {
+      return this.normalizeValue(this.username)
+    },
     bucketLabel () {
-      return `${this.clientIp}::${this.username.trim() || '(vacio)'}`
+      return `${this.normalizedClientIp}::${this.normalizedUsername || '(vacio)'}`
+    },
+    bucketEntries () {
+      const username = this.normalizedUsername
+      if (!username) {
+        return []
+      }
+
+      return Object.values(this.observedBucketsByKey)
+        .filter(entry => entry.username === username)
+        .sort((left, right) => {
+          if (left.clientIp === this.normalizedClientIp && right.clientIp !== this.normalizedClientIp) {
+            return -1
+          }
+
+          if (right.clientIp === this.normalizedClientIp && left.clientIp !== this.normalizedClientIp) {
+            return 1
+          }
+
+          return left.clientIp.localeCompare(right.clientIp)
+        })
+    },
+    currentBucketEntry () {
+      return this.bucketEntries.find(entry => entry.clientIp === this.normalizedClientIp) || null
     },
     stateSummary () {
       if (!this.stateResult || typeof this.stateResult !== 'object') {
-        return null
+        return this.currentBucketEntry
       }
 
       return {
-        failedAttempts: this.stateResult.failedAttempts,
-        remainingAttempts: this.stateResult.remainingAttempts,
-        limited: this.stateResult.limited
+        failedAttempts: this.currentBucketEntry ? this.currentBucketEntry.failedAttempts : this.stateResult.failedAttempts,
+        remainingAttempts: this.currentBucketEntry ? this.currentBucketEntry.remainingAttempts : this.stateResult.remainingAttempts,
+        limited: this.currentBucketEntry ? this.currentBucketEntry.limited : this.stateResult.limited
       }
     },
     vulnerablePreview () {
@@ -564,6 +631,91 @@ export default {
     pretty (value) {
       return prettyJson(value)
     },
+    normalizeValue (value) {
+      return value == null ? '' : String(value).trim()
+    },
+    bucketCacheKey (username, clientIp) {
+      return `${this.normalizeValue(clientIp)}::${this.normalizeValue(username)}`
+    },
+    normalizeBucketEntry (entry, fallbackUsername) {
+      const username = this.normalizeValue(entry.username || fallbackUsername || this.username)
+      const clientIp = this.normalizeValue(entry.clientIp || this.clientIp)
+      const failedAttempts = Number(entry.failedAttempts || 0)
+      const remainingAttempts = Number(
+        entry.remainingAttempts != null
+          ? entry.remainingAttempts
+          : (this.stateResult && this.stateResult.maxFailedAttempts) || 5
+      )
+
+      return {
+        bucketKey: entry.bucketKey || this.bucketCacheKey(username, clientIp),
+        username,
+        clientIp,
+        failedAttempts,
+        remainingAttempts,
+        limited: Boolean(entry.limited),
+        failureTimestamps: Array.isArray(entry.failureTimestamps) ? entry.failureTimestamps : []
+      }
+    },
+    clearObservedBuckets (username) {
+      const normalizedUsername = this.normalizeValue(username)
+      if (!normalizedUsername) {
+        this.observedBucketsByKey = {}
+        return
+      }
+
+      const nextEntries = { ...this.observedBucketsByKey }
+      Object.keys(nextEntries).forEach(key => {
+        if (key.endsWith(`::${normalizedUsername}`)) {
+          delete nextEntries[key]
+        }
+      })
+      this.observedBucketsByKey = nextEntries
+    },
+    syncObservedBuckets (state) {
+      if (!state || typeof state !== 'object') {
+        return
+      }
+
+      const username = this.normalizeValue(state.username || this.username)
+      if (!username) {
+        return
+      }
+
+      if (Array.isArray(state.activeBuckets)) {
+        this.clearObservedBuckets(username)
+        if (!state.activeBuckets.length) {
+          return
+        }
+
+        const nextEntries = { ...this.observedBucketsByKey }
+        state.activeBuckets.forEach(entry => {
+          const normalizedEntry = this.normalizeBucketEntry(entry, username)
+          nextEntries[normalizedEntry.bucketKey] = normalizedEntry
+        })
+        this.observedBucketsByKey = nextEntries
+        return
+      }
+
+      const currentEntry = this.normalizeBucketEntry({
+        username,
+        clientIp: state.clientIp || this.clientIp,
+        failedAttempts: state.failedAttempts,
+        remainingAttempts: state.remainingAttempts,
+        limited: state.limited
+      }, username)
+
+      const key = currentEntry.bucketKey
+      const nextEntries = { ...this.observedBucketsByKey }
+
+      if (currentEntry.failedAttempts > 0 || currentEntry.limited) {
+        nextEntries[key] = currentEntry
+      } else {
+        delete nextEntries[key]
+      }
+
+      this.observedBucketsByKey = nextEntries
+    },
     headers () {
       return {
         'X-Forwarded-For': this.clientIp
@@ -582,6 +734,7 @@ export default {
           headers: this.headers()
         })
         this.stateResult = response.data
+        this.syncObservedBuckets(response.data)
       } catch (error) {
         this.stateResult = apiPayload(error)
       } finally {
@@ -596,6 +749,8 @@ export default {
           headers: this.headers()
         })
         this.stateResult = response.data
+        this.clearObservedBuckets(this.username)
+        this.syncObservedBuckets(response.data)
       } catch (error) {
         this.stateResult = apiPayload(error)
       } finally {
@@ -806,6 +961,62 @@ export default {
   font-size: 0.95rem;
 }
 
+.bucket-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.bucket-overview__item,
+.bucket-entry {
+  border: 1px solid #dbe4f0;
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.bucket-overview__label,
+.bucket-entry__meta {
+  display: block;
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-bottom: 4px;
+}
+
+.bucket-entry-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.bucket-entry__header,
+.bucket-entry__stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bucket-entry__header {
+  margin-bottom: 6px;
+  color: #0f172a;
+}
+
+.bucket-entry__stats {
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.bucket-entry--current {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.bucket-entry--limited {
+  border-color: #c62828;
+}
+
 .flow-block--spaced {
   margin-top: 20px;
 }
@@ -847,6 +1058,10 @@ export default {
 
 @media (max-width: 960px) {
   .context-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bucket-overview {
     grid-template-columns: 1fr;
   }
 

@@ -1,5 +1,6 @@
 package com.tfm.vulnerableapp.service;
 
+import com.tfm.vulnerableapp.dto.RateLimitBucketEntryResponse;
 import com.tfm.vulnerableapp.dto.RateLimitBucketResponse;
 import com.tfm.vulnerableapp.dto.RateLimitLoginRequest;
 import com.tfm.vulnerableapp.dto.RateLimitLoginResponse;
@@ -10,7 +11,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,30 +78,17 @@ public class RateLimitLabService {
     public RateLimitBucketResponse inspectBucket(String username, String clientIp) {
         String normalizedUsername = normalize(username);
         String normalizedIp = normalize(clientIp);
-        String bucketKey = buildKey(normalizedIp, normalizedUsername);
-
-        Deque<Instant> failures = failedAttemptsByKey.computeIfAbsent(bucketKey, key -> new ArrayDeque<>());
-        pruneWindow(failures);
-
-        int failedAttempts = failures.size();
-        int remainingAttempts = Math.max(0, MAX_FAILED_ATTEMPTS - failedAttempts);
-
-        return new RateLimitBucketResponse(
-            normalizedUsername,
-            normalizedIp,
-            failedAttempts,
-            remainingAttempts,
-            MAX_FAILED_ATTEMPTS,
-            WINDOW.toSeconds(),
-            failedAttempts >= MAX_FAILED_ATTEMPTS
-        );
+        return buildBucketResponse(normalizedUsername, normalizedIp);
     }
 
     public RateLimitBucketResponse resetBucket(String username, String clientIp) {
         String normalizedUsername = normalize(username);
         String normalizedIp = normalize(clientIp);
-        failedAttemptsByKey.remove(buildKey(normalizedIp, normalizedUsername));
-        return inspectBucket(normalizedUsername, normalizedIp);
+        String bucketSuffix = bucketSuffix(normalizedUsername);
+
+        failedAttemptsByKey.keySet().removeIf(key -> key.endsWith(bucketSuffix));
+
+        return buildBucketResponse(normalizedUsername, normalizedIp);
     }
 
     private boolean isValidCredentials(RateLimitLoginRequest request) {
@@ -114,8 +104,75 @@ public class RateLimitLabService {
         }
     }
 
+    private RateLimitBucketResponse buildBucketResponse(String username, String clientIp) {
+        List<RateLimitBucketEntryResponse> activeBuckets = activeBucketsForUsername(username);
+        String currentBucketKey = buildKey(clientIp, username);
+
+        RateLimitBucketEntryResponse currentBucket = activeBuckets.stream()
+            .filter(bucket -> bucket.bucketKey().equals(currentBucketKey))
+            .findFirst()
+            .orElse(null);
+
+        int failedAttempts = currentBucket == null ? 0 : currentBucket.failedAttempts();
+        int remainingAttempts = currentBucket == null ? MAX_FAILED_ATTEMPTS : currentBucket.remainingAttempts();
+        boolean limited = currentBucket != null && currentBucket.limited();
+
+        return new RateLimitBucketResponse(
+            username,
+            clientIp,
+            failedAttempts,
+            remainingAttempts,
+            MAX_FAILED_ATTEMPTS,
+            WINDOW.toSeconds(),
+            limited,
+            activeBuckets.size(),
+            activeBuckets
+        );
+    }
+
+    private List<RateLimitBucketEntryResponse> activeBucketsForUsername(String username) {
+        String bucketSuffix = bucketSuffix(username);
+        List<RateLimitBucketEntryResponse> activeBuckets = new ArrayList<>();
+
+        for (Map.Entry<String, Deque<Instant>> entry : failedAttemptsByKey.entrySet()) {
+            String bucketKey = entry.getKey();
+            if (!bucketKey.endsWith(bucketSuffix)) {
+                continue;
+            }
+
+            Deque<Instant> failures = entry.getValue();
+            pruneWindow(failures);
+
+            if (failures.isEmpty()) {
+                failedAttemptsByKey.remove(bucketKey, failures);
+                continue;
+            }
+
+            String clientIp = bucketKey.substring(0, bucketKey.length() - bucketSuffix.length());
+            int failedAttempts = failures.size();
+            int remainingAttempts = Math.max(0, MAX_FAILED_ATTEMPTS - failedAttempts);
+
+            activeBuckets.add(new RateLimitBucketEntryResponse(
+                bucketKey,
+                username,
+                clientIp,
+                failedAttempts,
+                remainingAttempts,
+                failedAttempts >= MAX_FAILED_ATTEMPTS,
+                failures.stream().map(Instant::toString).toList()
+            ));
+        }
+
+        activeBuckets.sort((left, right) -> left.clientIp().compareTo(right.clientIp()));
+        return activeBuckets;
+    }
+
     private String buildKey(String clientIp, String username) {
         return normalize(clientIp) + "::" + username;
+    }
+
+    private String bucketSuffix(String username) {
+        return "::" + username;
     }
 
     private String normalize(String value) {

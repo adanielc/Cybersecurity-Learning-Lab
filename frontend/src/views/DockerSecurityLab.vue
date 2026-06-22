@@ -7,8 +7,8 @@
     secure-endpoint="docker-compose.yml | backend/Dockerfile"
     vulnerable-method="Compose"
     secure-method="Compose / Dockerfile"
-    vulnerable-hint="La version insegura publica servicios internos al host, usa root en backend y frontend y arranca sin healthchecks."
-    secure-hint="La version controlada del repo ya mejora privilegios y coordinacion de arranque, aunque una version realmente endurecida deberia ocultar las bases de datos en una red interna."
+    vulnerable-hint="La version insegura mantiene PostgreSQL y MongoDB accesibles desde el host, usa root en backend y frontend y arranca sin healthchecks."
+    secure-hint="La version controlada del repo mejora privilegios y coordinacion de arranque y deja PostgreSQL y MongoDB solo en la red interna Docker; desde el host ya no deberias poder atacarlas directamente."
     :remediation-points="remediationPoints"
     :side-bullets="sideBullets"
     :show-vulnerable-result-section="false"
@@ -22,7 +22,7 @@
         <div>
           <div class="mini-title">Que pasa por detras</div>
           <p class="mini-text">
-            El stack inseguro publica PostgreSQL, MongoDB, backend y frontend hacia el host. Ademas fuerza
+            El stack inseguro mantiene PostgreSQL, MongoDB, backend y frontend accesibles desde el host. Ademas fuerza
             <code>user: root</code> en backend y frontend, y pierde los <code>healthchecks</code> que ordenan el arranque.
           </p>
         </div>
@@ -54,8 +54,9 @@
           <div class="mini-title">Que cambia</div>
           <p class="mini-text">
             La version controlada del repo ya ejecuta el backend como <code>appuser</code> y restaura
-            <code>healthchecks</code> y dependencias por salud. La remediacion completa va un paso mas alla: dejar las
-            bases de datos en una red interna y publicar solo los servicios estrictamente necesarios.
+            <code>healthchecks</code> y dependencias por salud. Ademas, PostgreSQL y MongoDB dejan de publicarse al
+            host y quedan solo en la red interna Docker. Eso obliga a un atacante a comprometer primero otra capa o a
+            tener acceso a Docker para pivotar hacia las bases de datos.
           </p>
         </div>
 
@@ -149,6 +150,63 @@
 
       <v-card outlined class="mb-4">
         <v-card-title class="subtitle-2">
+          Guia de ataque directo a las bases de datos
+        </v-card-title>
+        <v-divider />
+        <v-card-text>
+          <p class="mini-text mb-4">
+            Este recorrido esta pensado para que el alumno arranque la variante insegura y aproveche la exposicion de
+            puertos para insertar usuarios sin pasar por la API. Primero levanta el compose vulnerable desde la raiz
+            del proyecto y luego conecta directamente con PostgreSQL y MongoDB. Si repites el mismo ataque con el
+            compose controlado, el acceso desde host debe fallar porque las BBDD ya no estan publicadas.
+          </p>
+
+          <div class="flow-block">
+            <div class="flow-block__title">Paso 1: arrancar el compose inseguro</div>
+            <v-row>
+              <v-col cols="12" md="6">
+                <div class="code-caption code-caption--danger">Comandos</div>
+                <pre class="code-box">{{ insecureStartupCommands }}</pre>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="code-caption">Que deberias observar</div>
+                <pre class="code-box">{{ insecureStartupNotes }}</pre>
+              </v-col>
+            </v-row>
+          </div>
+
+          <div class="flow-block flow-block--spaced">
+            <div class="flow-block__title">Paso 2: insertar un usuario en PostgreSQL</div>
+            <v-row>
+              <v-col cols="12" md="6">
+                <div class="code-caption code-caption--danger">Conexion e insert</div>
+                <pre class="code-box">{{ postgresAttackCommands }}</pre>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="code-caption">Impacto didactico</div>
+                <pre class="code-box">{{ postgresAttackNotes }}</pre>
+              </v-col>
+            </v-row>
+          </div>
+
+          <div class="flow-block flow-block--spaced">
+            <div class="flow-block__title">Paso 3: insertar un usuario en MongoDB</div>
+            <v-row>
+              <v-col cols="12" md="6">
+                <div class="code-caption code-caption--danger">Conexion e insert</div>
+                <pre class="code-box">{{ mongoAttackCommands }}</pre>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="code-caption">Impacto didactico</div>
+                <pre class="code-box">{{ mongoAttackNotes }}</pre>
+              </v-col>
+            </v-row>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <v-card outlined class="mb-4">
+        <v-card-title class="subtitle-2">
           Escenario 1: acceso directo desde el host
         </v-card-title>
         <v-divider />
@@ -215,7 +273,7 @@
         <v-divider />
         <v-card-text>
           <p class="mini-text mb-4">
-            Aqui el objetivo no es entrar por un puerto, sino ver cuanto dano puede hacer una intrusion una vez dentro y
+            Aqui el objetivo no es entrar por un puerto, sino ver cuanto daño puede hacer una intrusion una vez dentro y
             como influye la configuracion de arranque. Compara el uso de <code>root</code> con el principio de minimo
             privilegio y observa el papel de los <code>healthchecks</code>.
           </p>
@@ -291,7 +349,7 @@ export default {
       sideBullets: [
         'El vector de ataque puede ser la infraestructura, no solo el codigo de negocio.',
         'Publicar un puerto convierte un servicio interno en un objetivo remoto o local directo.',
-        'Root dentro del contenedor no equivale siempre a root del host, pero amplia el dano posible tras la intrusion.'
+        'Root dentro del contenedor no equivale siempre a root del host, pero amplia el daño posible tras la intrusion.'
       ],
       commonPlaces: [
         {
@@ -314,11 +372,11 @@ export default {
       labFiles: [
         {
           title: 'docker-compose.insecure.yml',
-          text: 'Archivo vulnerable del laboratorio. Publica puertos al host y fuerza root en backend y frontend.'
+          text: 'Archivo vulnerable del laboratorio. Publica PostgreSQL y MongoDB al host, fuerza root en backend y frontend y elimina healthchecks.'
         },
         {
           title: 'docker-compose.yml',
-          text: 'Version mas controlada del repo. Recupera healthchecks y usa appuser en backend.'
+          text: 'Version mas controlada del repo. Recupera healthchecks, usa appuser en backend y deja PostgreSQL y MongoDB solo en la red interna Docker.'
         },
         {
           title: 'backend/Dockerfile',
@@ -346,21 +404,23 @@ export default {
         '  postgres:',
         '    ports: ["5432:5432"]',
         '  mongo:',
-        '    ports: ["27017:27017"]',
+        '    ports: ["27018:27017"]',
         '  backend:',
         '    user: root',
-        '    ports: ["8081:8080"]',
+        '    ports: ["8082:8080"]',
         '  frontend:',
         '    user: root',
-        '    ports: ["8080:80"]'
+        '    ports: ["8083:80"]'
       ].join('\n')
     },
     secureOverview () {
       return [
         'services:',
         '  postgres:',
+        '    expose: ["5432"]',
         '    healthcheck: pg_isready ...',
         '  mongo:',
+        '    expose: ["27017"]',
         '    healthcheck: mongosh ping ...',
         '  backend:',
         '    user: appuser',
@@ -375,8 +435,8 @@ export default {
     insecureImpactPreview () {
       return [
         'localhost:5432  -> acceso directo a PostgreSQL',
-        'localhost:27017 -> acceso directo a MongoDB',
-        'backend como root -> mayor dano tras una RCE',
+        'localhost:27018 -> acceso directo a MongoDB',
+        'backend como root -> mayor daño tras una RCE',
         '',
         'El atacante evita capas de aplicacion y controles de negocio.'
       ].join('\n')
@@ -385,7 +445,7 @@ export default {
       return [
         'appuser reduce privilegios del proceso Java',
         'healthchecks reducen estados inconsistentes',
-        'sigue siendo recomendable ocultar las BBDD al host',
+        'las BBDD ya no aceptan conexiones directas desde el host',
         '',
         'La superficie baja, pero aun hay margen de endurecimiento.'
       ].join('\n')
@@ -397,10 +457,10 @@ export default {
         '    - "5432:5432"',
         'mongo:',
         '  ports:',
-        '    - "27017:27017"',
+        '    - "27018:27017"',
         'backend:',
         '  ports:',
-        '    - "8081:8080"'
+        '    - "8082:8080"'
       ].join('\n')
     },
     securePortsCode () {
@@ -443,6 +503,93 @@ export default {
         '  USER appuser'
       ].join('\n')
     },
+    insecureStartupCommands () {
+      return [
+        '# si ya tienes levantado el compose controlado, paralo primero',
+        'docker compose down',
+        '',
+        '# desde la raiz del proyecto',
+        'docker compose -f docker-compose.insecure.yml up --build',
+        '',
+        '# en otra terminal puedes comprobar puertos expuestos',
+        'docker compose -f docker-compose.insecure.yml ps'
+      ].join('\n')
+    },
+    insecureStartupNotes () {
+      return [
+        'frontend -> http://localhost:8083',
+        'backend  -> http://localhost:8082',
+        'postgres -> localhost:5432',
+        'mongo    -> localhost:27018',
+        '',
+        'La variante insegura publica ambas bases de datos al host.',
+        'Eso permite saltarte la API y escribir directamente en persistencia.',
+        'Si tu host no tiene psql o mongosh, usa docker compose exec dentro del contenedor.'
+      ].join('\n')
+    },
+    postgresAttackCommands () {
+      return [
+        '# opcion A: si tienes psql instalado en tu host',
+        'PGPASSWORD=postgres_pass psql -h localhost -p 5432 -U postgres_admin -d postgres_db',
+        '',
+        '# opcion B: sin instalar nada en el host, desde la raiz del proyecto',
+        'docker compose -f docker-compose.insecure.yml exec postgres \\',
+        '  psql -U postgres_admin -d postgres_db',
+        '',
+        '-- la tabla del laboratorio SQLi es lab_users',
+        'INSERT INTO lab_users (username, email, role, password)',
+        "VALUES ('docker_attacker_pg', 'docker.attacker.pg@lab.local', 'ADMIN', 'pgpw123');",
+        '',
+        '-- verifica que el usuario existe',
+        "SELECT id, username, email, role FROM lab_users WHERE username = 'docker_attacker_pg';"
+      ].join('\n')
+    },
+    postgresAttackNotes () {
+      return [
+        'Tabla afectada: lab_users',
+        'Vista donde puedes comprobar el efecto: /lab/sqli',
+        '',
+        'La insercion evita cualquier validacion de la API.',
+        'No hay DTO, no hay autorizacion y no hay logica de negocio.',
+        'Si el puerto esta publicado y conoces las credenciales, la base acepta el cambio directo.'
+      ].join('\n')
+    },
+    mongoAttackCommands () {
+      return [
+        '# opcion A: si tienes mongosh instalado en tu host',
+        'mongosh "mongodb://mongo_admin:mongo_pass@localhost:27018/mongo_db?authSource=admin"',
+        '',
+        '# opcion B: sin instalar nada en el host, desde la raiz del proyecto',
+        'docker compose -f docker-compose.insecure.yml exec mongo \\',
+        '  mongosh --username mongo_admin --password mongo_pass \\',
+        '  --authenticationDatabase admin mongo_db',
+        '',
+        '// la coleccion del laboratorio NoSQLi es lab_nosqli_users',
+        'db.lab_nosqli_users.insertOne({',
+        '  _id: "user-docker-attacker",',
+        '  username: "docker_attacker_mongo",',
+        '  password: "mongopw123",',
+        '  email: "docker.attacker.mongo@lab.local",',
+        '  role: "ADMIN"',
+        '})',
+        '',
+        '// verifica que el documento existe',
+        'db.lab_nosqli_users.find({ username: "docker_attacker_mongo" })'
+      ].join('\n')
+    },
+    mongoAttackNotes () {
+      return [
+        'Coleccion afectada: lab_nosqli_users',
+        'Vista donde puedes comprobar el efecto: /lab/nosql',
+        '',
+        'Si ves "zsh: command not found: mongosh", el problema es tu host, no el laboratorio.',
+        'En ese caso usa la opcion con docker compose exec para entrar al cliente Mongo dentro del contenedor.',
+        '',
+        'La insercion cae directamente en MongoDB sin pasar por el backend.',
+        'Si despues pruebas el login del laboratorio NoSQLi con ese usuario, veras que la base ya contiene el documento.',
+        'Ese es el valor didactico del compose inseguro: la exposicion de infraestructura se convierte en escritura arbitraria.'
+      ].join('\n')
+    },
     exposureScenario () {
       return this.exposurePresets.find(item => item.id === this.selectedExposure) || this.exposurePresets[0]
     },
@@ -467,10 +614,10 @@ export default {
           'docker-compose.insecure.yml',
           'mongo:',
           '  ports:',
-          '    - "27017:27017"',
+          '    - "27018:27017"',
           '',
           'Ejemplo de acceso:',
-          'mongosh "mongodb://mongo_admin:mongo_pass@localhost:27017/mongo_db?authSource=admin"'
+          'mongosh "mongodb://mongo_admin:mongo_pass@localhost:27018/mongo_db?authSource=admin"'
         ].join('\n')
       }
 
@@ -478,10 +625,10 @@ export default {
         'docker-compose.insecure.yml',
         'backend:',
         '  ports:',
-        '    - "8081:8080"',
+        '    - "8082:8080"',
         '',
         'Ejemplo de acceso:',
-        'curl http://localhost:8081/api/health'
+        'curl http://localhost:8082/api/health'
       ].join('\n')
     },
     exposureSecurePreview () {
@@ -498,14 +645,16 @@ export default {
       }
 
       return [
-        'Remediacion recomendada',
+        'docker-compose.yml',
         `${this.selectedExposure}:`,
         '  expose:',
         this.selectedExposure === 'postgres' ? '    - "5432"' : '    - "27017"',
         '  ports: []',
         '',
-        'Resultado: el servicio sigue accesible para otros contenedores,',
-        'pero deja de estar publicado al host local.'
+        'Intento desde host esperado:',
+        this.selectedExposure === 'postgres'
+          ? 'psql -h localhost -p 5432 ...  -> fallo de conexion'
+          : 'mongosh "mongodb://...@localhost:27018/..." -> fallo de conexion'
       ].join('\n')
     },
     exposureVulnerableExplanation () {
@@ -520,7 +669,7 @@ export default {
         return 'En un stack web alguien tiene que exponerse hacia el usuario final. La practica correcta es publicar el frontend o el proxy y mantener la capa de datos fuera del host.'
       }
 
-      return 'La variante controlada mantiene el puerto solo en la red interna de Docker. Otros contenedores pueden hablar con la base de datos, pero el host ya no tiene una entrada directa.'
+      return 'La variante controlada deja la base de datos solo en la red interna de Docker. Desde el host el ataque directo deja de funcionar; para llegar a la BBDD ya necesitas compromiso previo del backend, otro contenedor o acceso al daemon Docker.'
     },
     exposureImpact () {
       if (this.selectedExposure === 'postgres') {
@@ -566,7 +715,7 @@ export default {
         '{',
         '  "publicado_al_host": false,',
         '  "visible_desde_otros_contenedores": true,',
-        '  "riesgo_residual": "compromiso lateral dentro de la red interna"',
+        '  "riesgo_residual": "movimiento lateral o acceso privilegiado a Docker"',
         '}'
       ].join('\n')
     },

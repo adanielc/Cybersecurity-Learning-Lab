@@ -22,7 +22,11 @@
 
     <v-row class="mt-6">
       <v-col cols="12" md="4" v-for="card in summaryCards" :key="card.title">
-        <v-card class="stat-card">
+        <v-card
+          :class="['stat-card', { 'stat-card--interactive': card.to }]"
+          :link="Boolean(card.to)"
+          :to="card.to"
+        >
           <v-card-text>
             <div class="stat-card__icon">
               <v-icon color="white">{{ card.icon }}</v-icon>
@@ -79,7 +83,7 @@ export default {
       summaryCards: [
         { title: 'Vulnerabilidades implementadas', value: '11+', subtitle: 'Laboratorios activos', icon: 'mdi-bug-outline' },
         { title: 'Estado del backend', value: 'PENDING', subtitle: 'API REST disponible', icon: 'mdi-server-outline' },
-        { title: 'Usuarios registrados', value: 'Seed data', subtitle: 'Datos educativos', icon: 'mdi-account-group-outline' }
+        { title: 'Usuarios registrados', value: 'Seed data', subtitle: 'Haz clic para explorar', icon: 'mdi-account-group-outline', to: '/dashboard/seed-data' }
       ],
       featuredLabs: [
         {

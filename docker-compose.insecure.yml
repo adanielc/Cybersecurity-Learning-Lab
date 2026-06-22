@@ -17,7 +17,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INIT_DB_ROOT_PASSWORD:-mongo_pass}
       MONGO_DATABASE: ${MONGO_DATABASE:-mongo_db}
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongo_data:/data/db
 
@@ -37,9 +37,9 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INIT_DB_ROOT_USERNAME:-mongo_admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INIT_DB_ROOT_PASSWORD:-mongo_pass}
       MONGO_DATABASE: ${MONGO_DATABASE:-mongo_db}
-      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:8080}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:8083}
     ports:
-      - "8081:8080"
+      - "8082:8080"
     depends_on:
       - postgres
       - mongo
@@ -48,12 +48,12 @@ services:
     build:
       context: ./frontend
       args:
-        VUE_APP_API_BASE_URL: http://localhost:8081/api
+        VUE_APP_API_BASE_URL: http://localhost:8082/api
     user: root
     environment:
-      VUE_APP_API_BASE_URL: http://localhost:8081/api
+      VUE_APP_API_BASE_URL: http://localhost:8082/api
     ports:
-      - "8080:80"
+      - "8083:80"
     depends_on:
       - backend
 

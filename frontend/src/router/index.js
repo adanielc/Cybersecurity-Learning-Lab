@@ -9,6 +9,7 @@ import DockerSecurityLab from '../views/DockerSecurityLab.vue'
 import JwtLab from '../views/JwtLab.vue'
 import NoSqlInjectionLab from '../views/NoSqlInjectionLab.vue'
 import RateLimitLab from '../views/RateLimitLab.vue'
+import SeedDataView from '../views/SeedDataView.vue'
 import SqliLab from '../views/SqliLab.vue'
 import XssLab from '../views/XssLab.vue'
 import TokenStorageLab from '../views/TokenStorageLab.vue'
@@ -80,6 +81,11 @@ const routes = [
     name: 'rate-limit-lab',
     component: RateLimitLab,
     alias: '/labs/rate-limit'
+  },
+  {
+    path: '/dashboard/seed-data',
+    name: 'dashboard-seed-data',
+    component: SeedDataView
   },
   {
     path: '/lab/xss',
